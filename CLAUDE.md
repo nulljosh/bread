@@ -1,5 +1,14 @@
 # Bread - Claude Development Guide
 
+## ⚠️ DEPLOYMENT REMINDER
+**IMPORTANT:** When testing deployments, check the RIGHT URL:
+- **Vercel (Primary):** Latest deployment at vercel.app (check `vercel ls` for URL)
+- **GitHub Pages:** https://heyitsmejosh.com/bread/ (static hosting, uses Vercel APIs)
+
+**Don't waste tokens checking GitHub Pages when you mean to check Vercel!**
+
+---
+
 ## Project Vision
 Bread is a high-alpha, low-latency financial terminal designed for extreme efficiency. It combines prediction markets (Polymarket, Kalshi) with quantitative simulations and live market data into a unified dashboard optimized for minimal memory footprint and bandwidth usage.
 
