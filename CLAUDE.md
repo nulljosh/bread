@@ -364,16 +364,7 @@ git push
 
 ## Technical Debt & TODOs
 
-- [ ] Implement Delta-Threshold algorithm
-- [ ] Add Kalshi integration
-- [ ] Binary payload compression
-- [ ] Vectorized Monte Carlo
-- [ ] WebSocket for live data
-- [ ] Bundle size <10MB
-- [ ] S&P 500 full coverage
-- [ ] TradingView webhook receiver
-- [ ] Paper trading mode
-- [ ] White paper LaTeX template
+See [TODO.md](TODO.md) for the unified prioritized backlog.
 
 ---
 

@@ -5,6 +5,7 @@ import { useStocks } from './hooks/useStocks';
 import { formatPrice } from './utils/math';
 import { getTheme } from './utils/theme';
 import { defaultAssets } from './utils/assets';
+import { saveRun, getStats } from './utils/runHistory';
 import Ticker from './components/Ticker';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
@@ -178,12 +179,16 @@ export default function App() {
   const [targetTrillion, setTargetTrillion] = useState(false);
   const trends = useRef(Object.fromEntries(SYMS.map(s => [s, 0])));
   const [tradeStats, setTradeStats] = useState({ wins: {}, losses: {} });
+  const cooldownSyms = useRef({});  // sym -> tick when cooldown expires
+  const [runStats, setRunStats] = useState(() => getStats());
+  const hasSavedRun = useRef(false);
 
   // Animation refs for smooth 60fps rendering
   const animationRef = useRef(null);
   const lastFrameTime = useRef(0);
   const pricesRef = useRef(prices);
   const tickRef = useRef(0);
+  const liveStocksRef = useRef({});
 
   // Prediction Market State
   const [asset, setAsset] = useState('silver');
@@ -200,6 +205,11 @@ export default function App() {
   const { prices: liveAssets, lastUpdated } = useLivePrices(defaultAssets);
   const { markets, loading: pmLoading, error: pmError, refetch: refetchPm } = usePolymarket();
   const { stocks, error: stocksError } = useStocks();
+
+  // Sync live stock prices into ref for simulator access
+  useEffect(() => {
+    if (stocks) liveStocksRef.current = stocks;
+  }, [stocks]);
 
   // Trading Simulator Logic - requestAnimationFrame for smooth 60fps
   useEffect(() => {
@@ -225,7 +235,9 @@ export default function App() {
             const move = drift + trends.current[sym] + (Math.random() - 0.5) * 0.008;
             const prev = pricesRef.current[sym];
             const last = prev[prev.length - 1];
-            const base = ASSETS[sym].price;
+            // Use live Yahoo Finance price as base when available, fallback to static
+            const liveStock = liveStocksRef.current[sym];
+            const base = (liveStock && typeof liveStock.price === 'number') ? liveStock.price : ASSETS[sym].price;
 
             if (typeof last !== 'number' || isNaN(last)) {
               next[sym] = [base];
@@ -277,6 +289,8 @@ export default function App() {
         return updated.length > 100 ? updated.slice(-100) : updated;
       });
       setTradeStats(s => ({ ...s, losses: { ...s.losses, [position.sym]: (s.losses[position.sym] || 0) + pnl } }));
+      // Cooldown: avoid re-entering same symbol for 50 ticks after stop-loss
+      cooldownSyms.current[position.sym] = tickRef.current + 50;
       setPosition(null);
       return;
     }
@@ -317,6 +331,8 @@ export default function App() {
     let best = null;
     SYMS.forEach(sym => {
       if (sym === lastTraded) return;
+      // Skip symbols in cooldown after stop-loss
+      if (cooldownSyms.current[sym] && tickRef.current < cooldownSyms.current[sym]) return;
 
       const p = prices[sym];
       if (p.length < 10) return;
@@ -330,11 +346,18 @@ export default function App() {
       // At higher balance, require at least 0.01 shares (prevent dust trades)
       if (balance >= 2 && positionSize / current < 0.01) return;
 
-      const avg = p.slice(-10).reduce((a, b) => a + b, 0) / 10;
+      // Volatility filter: skip assets with erratic price movement
+      const recent = p.slice(-10);
+      const avg = recent.reduce((a, b) => a + b, 0) / 10;
+      const variance = recent.reduce((a, b) => a + Math.pow((b - avg) / avg, 2), 0) / 10;
+      const stddev = Math.sqrt(variance);
+      // Skip if stddev > 1.5% (too choppy for momentum entry)
+      if (stddev > 0.015) return;
+
       const strength = (current - avg) / avg;
 
-      // Optimized thresholds for higher win rate
-      const minStrength = balance < 2 ? 0.008 : balance < 10 ? 0.009 : balance < 100 ? 0.010 : 0.012;
+      // Tighter thresholds at small balances (need higher conviction), looser at large
+      const minStrength = balance < 2 ? 0.006 : balance < 10 ? 0.007 : balance < 100 ? 0.008 : balance < 1000 ? 0.009 : 0.010;
 
       if (strength > minStrength && (!best || strength > best.strength)) {
         best = { sym, price: current, strength };
@@ -368,12 +391,18 @@ export default function App() {
       if (size < 0.001) return;
 
       try {
+        // Adaptive take-profit: wider at higher balances to let winners run
+        const tpMult = balance < 10 ? 1.045 :     // 4.5% TP early (quick compounds)
+                       balance < 1000 ? 1.05 :     // 5% TP
+                       balance < 100000 ? 1.06 :   // 6% TP (let winners run)
+                       balance < 10000000 ? 1.07 : // 7% TP
+                       1.08;                       // 8% TP at $10M+ (big swings needed)
         setPosition({
           sym: best.sym,
           entry: best.price,
           size,
-          stop: best.price * 0.983, // 1.7% stop loss (matches lower volatility)
-          target: best.price * 1.05, // 5% take profit (better risk/reward ratio ~1:3)
+          stop: best.price * 0.985, // 1.5% stop loss (tight)
+          target: best.price * tpMult,
         });
         setLastTraded(best.sym);
         setTrades(t => {
@@ -398,6 +427,7 @@ export default function App() {
     setStartTime(null);
     setElapsedTime(0);
     trends.current = Object.fromEntries(SYMS.map(s => [s, 0]));
+    cooldownSyms.current = {};
   }, []);
 
   // Timer logic
@@ -417,6 +447,34 @@ export default function App() {
     }, 500); // Update timer less frequently (was 100ms)
     return () => clearInterval(timer);
   }, [running, startTime]);
+
+  // Auto-save run when sim ends (win or bust)
+  useEffect(() => {
+    const target = targetTrillion ? 1000000000000 : 1000000000;
+    const isWon = balance >= target;
+    const isBusted = balance <= 0.5;
+
+    if ((isWon || isBusted) && !hasSavedRun.current && tick > 0) {
+      hasSavedRun.current = true;
+      const exits = trades.filter(t => t.pnl);
+      const wins = exits.filter(t => parseFloat(t.pnl) > 0);
+      saveRun({
+        won: isWon,
+        finalBalance: balance,
+        duration: elapsedTime,
+        tradeCount: exits.length,
+        tradeWinRate: exits.length ? (wins.length / exits.length * 100) : 0,
+        ticks: tick,
+        target: target,
+      });
+      setRunStats(getStats());
+    }
+  }, [balance, tick]);
+
+  // Reset save flag on new run
+  useEffect(() => {
+    if (running) hasSavedRun.current = false;
+  }, [running]);
 
   const pnl = balance - 1;
   const currentPrice = position ? prices[position.sym][prices[position.sym].length - 1] : 0;
@@ -803,6 +861,20 @@ export default function App() {
                 </div>
               )}
             </div>
+
+            {runStats && (
+              <div style={{ background: t.surface, borderRadius: 12, padding: 12, marginTop: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: t.textSecondary, marginBottom: 6 }}>RUN HISTORY</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: t.textTertiary }}>
+                  <span>{runStats.wins}W / {runStats.losses}L ({runStats.winRate}%)</span>
+                  <span>{runStats.totalRuns} runs</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: t.textTertiary, marginTop: 4 }}>
+                  <span>Avg trades: {runStats.avgTrades}</span>
+                  <span>Avg trade WR: {runStats.avgWinRate}%</span>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
