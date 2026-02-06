@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 // MAG7 + Popular stocks + CFDs (32 total)
-const DEFAULT_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'NVDA', 'PLTR', 'HOOD', 'COST', 'JPM', 'WMT', 'TGT', 'PG', 'HIMS', 'COIN', 'SQ', 'SHOP', 'RKLB', 'SOFI', 'XAGUSD', 'XCUUSD', 'XAUUSD', 'XIC', 'NAS100', 'T', 'US500', 'US30', 'IBM', 'DXY', 'IWM', 'DIS'];
+const DEFAULT_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'NVDA', 'CRM', 'PLTR', 'HOOD', 'COST', 'JPM', 'WMT', 'TGT', 'PG', 'HIMS', 'COIN', 'SQ', 'SHOP', 'RKLB', 'SOFI', 'T', 'IBM', 'DIS', 'IWM', 'GC=F', 'SI=F', 'CL=F'];
 
 // Retry helper with exponential backoff
 const fetchWithRetry = async (url, maxRetries = 3, baseDelay = 1000) => {
@@ -67,6 +67,10 @@ const FALLBACK_DATA = {
   IBM: { symbol: 'IBM', price: 290, changePercent: 0.18 },
   DIS: { symbol: 'DIS', price: 107, changePercent: -0.42 },
   IWM: { symbol: 'IWM', price: 256, changePercent: 0.55 },
+  CRM: { symbol: 'CRM', price: 325, changePercent: -0.45 },
+  'GC=F': { symbol: 'GC=F', price: 2870, changePercent: 0.32 },
+  'SI=F': { symbol: 'SI=F', price: 32, changePercent: 0.18 },
+  'CL=F': { symbol: 'CL=F', price: 73, changePercent: -0.55 },
 };
 
 export function useStocks(symbols = DEFAULT_SYMBOLS) {
