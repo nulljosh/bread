@@ -41,32 +41,32 @@ const fetchWithRetry = async (url, maxRetries = 3, baseDelay = 1000) => {
   throw lastError;
 };
 
-// Fallback static data for when API fails (last known prices - Jan 24, 2026)
+// Fallback static data for when API fails (last known prices - Feb 6, 2026)
 const FALLBACK_DATA = {
-  AAPL: { symbol: 'AAPL', price: 247, changePercent: 0.42 },
-  MSFT: { symbol: 'MSFT', price: 454, changePercent: -0.18 },
-  GOOGL: { symbol: 'GOOGL', price: 323, changePercent: 0.33 },
-  AMZN: { symbol: 'AMZN', price: 220, changePercent: 0.55 },
-  NVDA: { symbol: 'NVDA', price: 185, changePercent: 1.24 },
-  META: { symbol: 'META', price: 595, changePercent: -0.27 },
-  TSLA: { symbol: 'TSLA', price: 421, changePercent: 2.15 },
-  PLTR: { symbol: 'PLTR', price: 71, changePercent: 1.82 },
-  HOOD: { symbol: 'HOOD', price: 38, changePercent: -0.55 },
-  COST: { symbol: 'COST', price: 1020, changePercent: 0.31 },
-  JPM: { symbol: 'JPM', price: 245, changePercent: 0.12 },
-  WMT: { symbol: 'WMT', price: 95, changePercent: -0.08 },
-  TGT: { symbol: 'TGT', price: 142, changePercent: 0.65 },
-  PG: { symbol: 'PG', price: 170, changePercent: 0.22 },
-  HIMS: { symbol: 'HIMS', price: 28, changePercent: 3.45 },
-  COIN: { symbol: 'COIN', price: 265, changePercent: 2.87 },
-  SQ: { symbol: 'SQ', price: 82, changePercent: 1.12 },
-  SHOP: { symbol: 'SHOP', price: 115, changePercent: 0.88 },
-  RKLB: { symbol: 'RKLB', price: 24, changePercent: 4.22 },
-  SOFI: { symbol: 'SOFI', price: 16, changePercent: 1.55 },
-  T: { symbol: 'T', price: 22, changePercent: -0.33 },
-  IBM: { symbol: 'IBM', price: 235, changePercent: 0.18 },
-  DIS: { symbol: 'DIS', price: 105, changePercent: -0.42 },
-  IWM: { symbol: 'IWM', price: 228, changePercent: 0.55 },
+  AAPL: { symbol: 'AAPL', price: 279, changePercent: 0.42 },
+  MSFT: { symbol: 'MSFT', price: 394, changePercent: -0.18 },
+  GOOGL: { symbol: 'GOOGL', price: 328, changePercent: 0.33 },
+  AMZN: { symbol: 'AMZN', price: 205, changePercent: -7.96 },
+  NVDA: { symbol: 'NVDA', price: 177, changePercent: 1.24 },
+  META: { symbol: 'META', price: 656, changePercent: -2.19 },
+  TSLA: { symbol: 'TSLA', price: 397, changePercent: 2.15 },
+  PLTR: { symbol: 'PLTR', price: 136, changePercent: 1.82 },
+  HOOD: { symbol: 'HOOD', price: 78, changePercent: -7.41 },
+  COST: { symbol: 'COST', price: 980, changePercent: 0.31 },
+  JPM: { symbol: 'JPM', price: 268, changePercent: 0.12 },
+  WMT: { symbol: 'WMT', price: 128, changePercent: -0.08 },
+  TGT: { symbol: 'TGT', price: 137, changePercent: 0.65 },
+  PG: { symbol: 'PG', price: 172, changePercent: 0.22 },
+  HIMS: { symbol: 'HIMS', price: 27, changePercent: 3.45 },
+  COIN: { symbol: 'COIN', price: 146, changePercent: -12.58 },
+  SQ: { symbol: 'SQ', price: 83, changePercent: 0.57 },
+  SHOP: { symbol: 'SHOP', price: 131, changePercent: 0.05 },
+  RKLB: { symbol: 'RKLB', price: 71, changePercent: 4.22 },
+  SOFI: { symbol: 'SOFI', price: 19, changePercent: -6.22 },
+  T: { symbol: 'T', price: 27, changePercent: -0.33 },
+  IBM: { symbol: 'IBM', price: 290, changePercent: 0.18 },
+  DIS: { symbol: 'DIS', price: 107, changePercent: -0.42 },
+  IWM: { symbol: 'IWM', price: 256, changePercent: 0.55 },
 };
 
 export function useStocks(symbols = DEFAULT_SYMBOLS) {
@@ -82,25 +82,32 @@ export function useStocks(symbols = DEFAULT_SYMBOLS) {
         throw new Error('Invalid symbols: must be a non-empty array');
       }
 
-      const data = await fetchWithRetry(`/api/stocks?symbols=${symbols.join(',')}`);
+      const raw = await fetchWithRetry(`/api/stocks?symbols=${symbols.join(',')}`);
 
-      // Validate response
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected array');
+      // Handle both formats: flat array (Vercel serverless) or Yahoo raw response (dev proxy)
+      const data = Array.isArray(raw) ? raw : (raw?.quoteResponse?.result ?? []);
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('Invalid response format or empty result');
       }
 
-      // Map to stock objects with validation
+      // Map to stock objects with validation, normalizing Yahoo raw field names
       const stockMap = {};
       data.forEach(s => {
-        if (s && s.symbol && typeof s.price === 'number') {
-          stockMap[s.symbol] = {
-            symbol: s.symbol,
-            price: s.price,
-            change: s.change ?? 0,
-            changePercent: s.changePercent ?? 0,
-            volume: s.volume ?? 0,
-            high52: s.fiftyTwoWeekHigh ?? s.price,
-            low52: s.fiftyTwoWeekLow ?? s.price,
+        const symbol = s.symbol;
+        const price = s.price ?? s.regularMarketPrice;
+        const change = s.change ?? s.regularMarketChange;
+        const changePercent = s.changePercent ?? s.regularMarketChangePercent;
+        const volume = s.volume ?? s.regularMarketVolume;
+
+        if (symbol && typeof price === 'number') {
+          stockMap[symbol] = {
+            symbol,
+            price,
+            change: change ?? 0,
+            changePercent: changePercent ?? 0,
+            volume: volume ?? 0,
+            high52: s.fiftyTwoWeekHigh ?? s.high52 ?? price,
+            low52: s.fiftyTwoWeekLow ?? s.low52 ?? price,
           };
         }
       });
