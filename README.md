@@ -14,6 +14,10 @@ Bread is a high-performance financial terminal that combines:
 - **Monte Carlo Analysis**: Auto-parameterized simulations with bull/base/bear scenarios
 - **Live Market Data**: Yahoo Finance integration for stocks, commodities, crypto
 
+## How It Works
+
+![Workflow Diagram](docs/workflow.svg)
+
 ### Architecture Goals
 
 | Metric | Target | Current | Status |
