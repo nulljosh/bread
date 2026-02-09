@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 850" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>
+      .box { fill: rgba(255, 255, 255, 0.7); stroke: rgba(0, 0, 0, 0.1); stroke-width: 1.5; rx: 12; filter: url(#glass); }
+      .box-success { fill: rgba(52, 199, 89, 0.15); stroke: rgba(52, 199, 89, 0.4); stroke-width: 1.5; rx: 12; filter: url(#glass); }
+      .box-data { fill: rgba(0, 122, 255, 0.15); stroke: rgba(0, 122, 255, 0.4); stroke-width: 1.5; rx: 12; filter: url(#glass); }
+      .box-trade { fill: rgba(255, 149, 0, 0.15); stroke: rgba(255, 149, 0, 0.4); stroke-width: 1.5; rx: 12; filter: url(#glass); }
+      .text { fill: #1d1d1f; font-size: 15px; text-anchor: middle; font-weight: 500; }
+      .text-small { fill: #6e6e73; font-size: 12px; text-anchor: middle; font-weight: 400; }
+      .text-data { fill: #007aff; }
+      .text-trade { fill: #ff9500; }
+      .arrow { stroke: #86868b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-data { stroke: #007aff; stroke-width: 2; marker-end: url(#arrowhead-data); }
+      .arrow-trade { stroke: #ff9500; stroke-width: 2; marker-end: url(#arrowhead-trade); }
+      .title { fill: #1d1d1f; font-size: 24px; font-weight: 600; text-anchor: middle; }
+    </style>
+
+    <filter id="glass">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo"/>
+      <feBlend in="SourceGraphic" in2="goo"/>
+    </filter>
+
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#86868b" />
+    </marker>
+    <marker id="arrowhead-data" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#007aff" />
+    </marker>
+    <marker id="arrowhead-trade" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#ff9500" />
+    </marker>
+
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5f5f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8e8ed;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="850" fill="url(#bgGradient)"/>
+
+  <text x="450" y="40" class="title">Bread - Trading Simulator Workflow</text>
+
+  <!-- Data Sources -->
+  <rect x="50" y="80" width="200" height="60" class="box-data"/>
+  <text x="150" y="110" class="text text-data">📊 Yahoo Finance</text>
+  <text x="150" y="128" class="text-small">61 assets, live prices</text>
+
+  <rect x="300" y="80" width="200" height="60" class="box-data"/>
+  <text x="400" y="110" class="text text-data">🎲 Polymarket</text>
+  <text x="400" y="128" class="text-small">Prediction markets</text>
+
+  <rect x="550" y="80" width="200" height="60" class="box-data"/>
+  <text x="650" y="110" class="text text-data">🎯 Monte Carlo</text>
+  <text x="650" y="128" class="text-small">Bull/base/bear sims</text>
+
+  <!-- Convergence -->
+  <path d="M 150 140 L 450 200" class="arrow-data"/>
+  <path d="M 400 140 L 450 200" class="arrow-data"/>
+  <path d="M 650 140 L 450 200" class="arrow-data"/>
+
+  <!-- Real-time Engine -->
+  <rect x="300" y="200" width="300" height="70" class="box"/>
+  <text x="450" y="228" class="text">⚡ Real-Time Engine</text>
+  <text x="450" y="246" class="text-small">50ms tick rate</text>
+  <text x="450" y="260" class="text-small">Batched price updates</text>
+
+  <path d="M 450 270 L 450 300" class="arrow"/>
+
+  <!-- Trading Algorithm -->
+  <rect x="300" y="300" width="300" height="80" class="box-trade"/>
+  <text x="450" y="330" class="text text-trade">🤖 Trading Algorithm</text>
+  <text x="450" y="348" class="text-small">Scan 61 assets for momentum</text>
+  <text x="450" y="362" class="text-small">1.0%+ moves, 75% position size</text>
+  <text x="450" y="376" class="text-small">1.8% stop loss, 4.2% take profit</text>
+
+  <path d="M 450 380 L 450 410" class="arrow-trade"/>
+
+  <!-- Risk Management -->
+  <rect x="300" y="410" width="300" height="70" class="box"/>
+  <text x="450" y="438" class="text">🛡️ Risk Management</text>
+  <text x="450" y="456" class="text-small">Dynamic position sizing</text>
+  <text x="450" y="470" class="text-small">$1: 75% → $10M: 2%</text>
+
+  <path d="M 450 480 L 450 510" class="arrow"/>
+
+  <!-- Execution -->
+  <rect x="300" y="510" width="300" height="70" class="box-trade"/>
+  <text x="450" y="538" class="text text-trade">💰 Execute Trade</text>
+  <text x="450" y="556" class="text-small">Fractional shares</text>
+  <text x="450" y="570" class="text-small">Trailing stops enabled</text>
+
+  <path d="M 450 580 L 450 610" class="arrow"/>
+
+  <!-- Performance Tracking -->
+  <rect x="300" y="610" width="300" height="70" class="box-success"/>
+  <text x="450" y="638" class="text">📈 Track Performance</text>
+  <text x="450" y="656" class="text-small">Win rate, P&L, trade history</text>
+  <text x="450" y="670" class="text-small">Time-weighted returns</text>
+
+  <path d="M 450 680 L 450 710" class="arrow"/>
+
+  <!-- Win Condition -->
+  <rect x="300" y="710" width="300" height="70" class="box-success"/>
+  <text x="450" y="738" class="text">🎯 $1 → $1B Challenge</text>
+  <text x="450" y="756" class="text-small">Target: <60 seconds</text>
+  <text x="450" y="770" class="text-small">Current: ~45s average</text>
+
+  <!-- Legend -->
+  <rect x="80" y="30" width="120" height="26" class="box-data" opacity="0.8"/>
+  <text x="140" y="48" class="text-small text-data" font-weight="500">Data Source</text>
+
+  <rect x="210" y="30" width="120" height="26" class="box-trade" opacity="0.8"/>
+  <text x="270" y="48" class="text-small text-trade" font-weight="500">Trading Logic</text>
+
+  <rect x="340" y="30" width="120" height="26" class="box-success" opacity="0.8"/>
+  <text x="400" y="48" class="text-small" font-weight="500" fill="#34c759">Success</text>
+
+  <rect x="470" y="30" width="120" height="26" class="box" opacity="0.8"/>
+  <text x="530" y="48" class="text-small" font-weight="500">Processing</text>
+
+  <!-- Performance Stats -->
+  <text x="450" y="820" class="text-small" font-weight="400">⏱️ Bundle: 233KB | Memory: <10MB | Win Rate: ~70%</text>
+</svg>
