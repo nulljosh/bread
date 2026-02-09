@@ -4,6 +4,8 @@
 
 **Live Demo**: https://bread-m0zrli7pf-nulljosh-9577s-projects.vercel.app | **Local**: `npm run dev` → http://localhost:5173
 
+![Workflow Diagram](docs/workflow.svg)
+
 ---
 
 ## Overview
@@ -13,10 +15,6 @@ Bread is a high-performance financial terminal that combines:
 - **Prediction Markets**: Real-time Polymarket integration with 90%+ probability filters
 - **Monte Carlo Analysis**: Auto-parameterized simulations with bull/base/bear scenarios
 - **Live Market Data**: Yahoo Finance integration for stocks, commodities, crypto
-
-## How It Works
-
-![Workflow Diagram](docs/workflow.svg)
 
 ### Architecture Goals
 
