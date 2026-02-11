@@ -40,7 +40,38 @@
 19. **Interactive Brokers API** - TWS integration for live execution
 20. **Kill switch + position limits** - Risk management guardrails
 
-## P5 - Future Architecture
+## P5 - Civilian Palantir (OSINT Intelligence Layer)
+Inspiration: OSINT Intelligence Platform (dark map UI, live tracking sidebar, social intel feeds)
+Goal: Open-source civilian Palantir — unified geospatial + financial + social intelligence
+
+### Map & Geospatial
+25. **Live world map** - Dark-themed interactive map with clustered event pins (Leaflet/Mapbox GL)
+26. **Earthquake alerts** - USGS API feed with magnitude, depth, location, coordinates, timestamp overlay
+27. **Conflict/incident markers** - Color-coded pins by type (military, protest, natural disaster, infrastructure)
+28. **DOT camera feeds** - Department of Transportation live traffic/highway cameras
+29. **Geolocation tagging** - Auto-tag all events with lat/lng, reverse geocode to human-readable
+
+### Social Intelligence
+30. **Twitter/X feed** - Real-time filtered stream (keywords: breaking, alert, confirmed, military, earthquake)
+31. **Reddit/4chan /pol/ /biz/** - Sentiment scraping, early signal detection
+32. **Citizen incident reports** - Crowdsourced local event reporting (Citizen app-style)
+33. **Scanner feeds** - Police/fire/EMS radio streams (Broadcastify API or similar)
+34. **Engagement metrics** - Show likes/retweets/replies for credibility weighting
+
+### Intelligence Pipeline
+35. **ELINT news aggregation** - Breaking news from @ELINTNews, @Global_Intel, @IntelCrab style accounts
+36. **Event → market correlation** - Map geopolitical events to market impact (Strait of Hormuz → oil, Tbilisi protests → emerging markets)
+37. **Live tracking sidebar** - "8 items" style feed with real-time event count, source attribution
+38. **Search & filter** - Full-text search across all intel sources, filter by region/type/severity
+39. **Alert system** - Push notifications for high-severity events (>5.0 earthquake, military escalation, >3% market move)
+
+### Data Sources
+- USGS (earthquakes), GDACS (disasters), ACLED (conflict), Broadcastify (scanners)
+- Twitter/X API, Reddit API, news RSS/webhooks
+- DOT camera APIs (state-level), Citizen API (if available)
+- Polymarket + financial feeds (already built in bread)
+
+## P6 - Future Architecture
 21. **C++ core** - Rewrite compute modules (see `c-core` branch)
 22. **WebAssembly bridge** - Compile C++ to WASM for browser
 23. **Custom RTOS** - Bare-metal financial OS (<5MB)
