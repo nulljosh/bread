@@ -7,6 +7,7 @@ import { getTheme } from './utils/theme';
 import { defaultAssets } from './utils/assets';
 import { saveRun, getStats } from './utils/runHistory';
 import Ticker from './components/Ticker';
+import SurvivalMode from './components/SurvivalMode';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -158,6 +159,7 @@ const Card = ({ children, style, onClick, dark, t }) => (
 );
 
 export default function App() {
+  const [mode, setMode] = useState('simulator'); // 'simulator' or 'survival'
   const [dark, setDark] = useState(true);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
@@ -663,6 +665,20 @@ export default function App() {
   //   bear: t.red
   // };
 
+  // Mode switcher
+  if (mode === 'survival') {
+    return (
+      <div style={{ minHeight: '100dvh', background: t.bg, color: t.text, fontFamily: font }}>
+        <header style={{ padding: '10px 16px', borderBottom: `1px solid ${t.border}` }}>
+          <button onClick={() => setMode('simulator')} style={{ background: t.surface, border: 'none', padding: '8px 16px', color: t.text, cursor: 'pointer', borderRadius: 6 }}>
+            ← Back to Simulator
+          </button>
+        </header>
+        <SurvivalMode />
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: '100dvh', background: t.bg, color: t.text, fontFamily: font }}>
       {/* Header */}
@@ -671,6 +687,9 @@ export default function App() {
           <a href="https://heyitsmejosh.com" style={{ color: t.textSecondary, textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>~</a>
           <span style={{ color: t.textTertiary, fontSize: 13 }}>/</span>
           <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>bread</span>
+          <button onClick={() => setMode('survival')} style={{ marginLeft: 10, background: t.accent, border: 'none', padding: '4px 8px', color: '#fff', fontSize: 11, borderRadius: 4, cursor: 'pointer' }}>
+            SURVIVAL MODE
+          </button>
           <span style={{ width: 1, height: 14, background: t.border, marginLeft: 4 }} />
           <StatusBar t={t} />
         </div>
