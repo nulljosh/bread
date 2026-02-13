@@ -6,6 +6,9 @@ import { formatPrice } from './utils/math';
 import { getTheme } from './utils/theme';
 import { defaultAssets } from './utils/assets';
 import { saveRun, getStats } from './utils/runHistory';
+import { calculateKelly, detectEdge } from './utils/trading';
+import { tldr } from './utils/helpers';
+import { BlinkingDot, StatusBar, Card } from './components/ui';
 import Ticker from './components/Ticker';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
@@ -77,27 +80,6 @@ const ASSETS = {
 };
 const SYMS = Object.keys(ASSETS);
 
-// Kelly Criterion: f = (bp - q) / b
-// f = fraction to bet, b = odds, p = win probability, q = 1-p
-function calculateKelly(odds, winProb, fractional = 0.25) {
-  const b = odds - 1;
-  const p = winProb;
-  const q = 1 - p;
-  const kelly = (b * p - q) / b;
-  return Math.max(0, Math.min(kelly * fractional, 0.1)); // Cap at 10%
-}
-
-// Edge detection: compare market odds to implied probability
-function detectEdge(market) {
-  const yesProb = parseFloat(market.outcomePrices?.[0]) || 0;
-  const noProb = parseFloat(market.outcomePrices?.[1]) || 0;
-
-  const edge = Math.max(yesProb, noProb) - 0.5; // Edge over coin flip
-  const side = yesProb > noProb ? 'YES' : 'NO';
-  const prob = Math.max(yesProb, noProb);
-
-  return { edge, side, prob, hasEdge: edge > 0.4 }; // >90% = edge
-}
 
 // Keyword mappings for category filters
 const categoryKeywords = {
@@ -108,76 +90,6 @@ const categoryKeywords = {
   culture: ['oscar', 'grammy', 'emmy', 'movie', 'film', 'music', 'celebrity', 'award', 'netflix', 'spotify', 'tiktok', 'twitter', 'elon', 'kanye', 'taylor swift'],
 };
 
-// Bloomberg-style blinking indicators
-const BlinkingDot = ({ color, delay = 0, speed = 2 }) => (
-  <span style={{
-    display: 'inline-block',
-    width: 6,
-    height: 6,
-    borderRadius: '50%',
-    backgroundColor: color,
-    animation: `blink ${speed}s ease-in-out ${delay}s infinite`,
-    boxShadow: `0 0 4px ${color}`,
-  }} />
-);
-
-const StatusBar = ({ t }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
-    <BlinkingDot color={t.green} delay={0} speed={3} />
-    <span style={{ color: t.textTertiary, fontWeight: 500 }}>LIVE</span>
-  </div>
-);
-
-// Inject keyframes
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-  }
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  @keyframes scroll {
-    0% { transform: translate3d(0, 0, 0); }
-    100% { transform: translate3d(-50%, 0, 0); }
-  }
-  * {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-`;
-if (!document.head.querySelector('#bloomberg-animations')) {
-  styleSheet.id = 'bloomberg-animations';
-  document.head.appendChild(styleSheet);
-}
-
-const tldr = (question, maxLen = 50) => {
-  if (!question || question.length <= maxLen) return question;
-  const truncated = question.slice(0, maxLen);
-  const lastSpace = truncated.lastIndexOf(' ');
-  return (lastSpace > 20 ? truncated.slice(0, lastSpace) : truncated) + '...';
-};
-
-const Card = ({ children, style, onClick, dark, t }) => (
-  <div onClick={onClick} style={{
-    background: t.glass,
-    backdropFilter: 'blur(40px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-    borderRadius: 20,
-    border: `0.5px solid ${t.border}`,
-    boxShadow: dark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.08)',
-    cursor: onClick ? 'pointer' : 'default',
-    overflow: 'hidden',
-    transition: 'all 0.2s ease',
-    ...style
-  }}>{children}</div>
-);
 
 export default function App() {
   const [dark, setDark] = useState(true);
