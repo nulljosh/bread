@@ -7,7 +7,6 @@ import { getTheme } from './utils/theme';
 import { defaultAssets } from './utils/assets';
 import { saveRun, getStats } from './utils/runHistory';
 import Ticker from './components/Ticker';
-import SurvivalMode from './components/SurvivalMode';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
 // Fallback prices - live prices auto-loaded from Yahoo Finance via useStocks
@@ -77,6 +76,28 @@ const ASSETS = {
   SHIB: { name: 'Shiba Inu', price: 0.000021, color: '#FFA500' },
 };
 const SYMS = Object.keys(ASSETS);
+
+// Kelly Criterion: f = (bp - q) / b
+// f = fraction to bet, b = odds, p = win probability, q = 1-p
+function calculateKelly(odds, winProb, fractional = 0.25) {
+  const b = odds - 1;
+  const p = winProb;
+  const q = 1 - p;
+  const kelly = (b * p - q) / b;
+  return Math.max(0, Math.min(kelly * fractional, 0.1)); // Cap at 10%
+}
+
+// Edge detection: compare market odds to implied probability
+function detectEdge(market) {
+  const yesProb = parseFloat(market.outcomePrices?.[0]) || 0;
+  const noProb = parseFloat(market.outcomePrices?.[1]) || 0;
+
+  const edge = Math.max(yesProb, noProb) - 0.5; // Edge over coin flip
+  const side = yesProb > noProb ? 'YES' : 'NO';
+  const prob = Math.max(yesProb, noProb);
+
+  return { edge, side, prob, hasEdge: edge > 0.4 }; // >90% = edge
+}
 
 // Keyword mappings for category filters
 const categoryKeywords = {
@@ -159,7 +180,6 @@ const Card = ({ children, style, onClick, dark, t }) => (
 );
 
 export default function App() {
-  const [mode, setMode] = useState('simulator'); // 'simulator' or 'survival'
   const [dark, setDark] = useState(true);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
@@ -185,6 +205,10 @@ export default function App() {
   const cooldownSyms = useRef({});  // sym -> tick when cooldown expires
   const [runStats, setRunStats] = useState(() => getStats());
   const hasSavedRun = useRef(false);
+  const [apiCostPerDay] = useState(2.89);
+  const [pmTrades, setPmTrades] = useState([]);
+  const lastPmScan = useRef(0);
+  const [pmBalance, setPmBalance] = useState(0); // Track prediction market P&L separately
 
   // Animation refs for smooth 60fps rendering
   const animationRef = useRef(null);
@@ -213,6 +237,58 @@ export default function App() {
   useEffect(() => {
     if (stocks) liveStocksRef.current = stocks;
   }, [stocks]);
+
+  // Prediction market scanning - every 10s when running
+  useEffect(() => {
+    if (!running || !markets || markets.length === 0) return;
+
+    const scanInterval = setInterval(() => {
+      // Find markets with strong edges (>90% probability)
+      const opportunities = markets
+        .map(m => ({ ...m, ...detectEdge(m) }))
+        .filter(m => m.hasEdge)
+        .sort((a, b) => b.edge - a.edge)
+        .slice(0, 3);
+
+      if (opportunities.length > 0 && balance > 1) {
+        const opp = opportunities[0];
+        const kellyFraction = calculateKelly(opp.prob / (1 - opp.prob), opp.prob);
+        const betSize = Math.min(balance * kellyFraction, balance * 0.05); // Max 5% per PM bet
+
+        if (betSize > 0.50) {
+          // Simulate trade (use actual probability with some noise for realism)
+          const win = Math.random() < opp.prob * 0.95; // Slight house edge
+          const payout = win ? betSize * (1 / opp.prob - 1) : -betSize;
+
+          setBalance(b => Math.max(0.5, b + payout));
+          setPmBalance(pb => pb + payout);
+          setPmTrades(prev => {
+            const updated = [...prev, {
+              type: win ? 'PM_WIN' : 'PM_LOSS',
+              market: opp.question,
+              side: opp.side,
+              size: betSize,
+              pnl: payout.toFixed(2),
+              prob: (opp.prob * 100).toFixed(0)
+            }];
+            return updated.length > 50 ? updated.slice(-50) : updated;
+          });
+
+          // Also add to main trades log for combined history
+          setTrades(t => {
+            const updated = [...t, {
+              type: win ? 'PM_WIN' : 'PM_LOSS',
+              sym: `PM:${opp.side}`,
+              pnl: payout.toFixed(2)
+            }];
+            return updated.length > 100 ? updated.slice(-100) : updated;
+          });
+        }
+      }
+    }, 10000); // Scan every 10s
+
+    return () => clearInterval(scanInterval);
+  }, [running, markets, balance]);
 
   // Trading Simulator Logic - requestAnimationFrame for smooth 60fps
   useEffect(() => {
@@ -426,6 +502,8 @@ export default function App() {
     setTradeStats({ wins: {}, losses: {} });
     setStartTime(null);
     setElapsedTime(0);
+    setPmTrades([]);
+    setPmBalance(0);
     trends.current = Object.fromEntries(SYMS.map(s => [s, 0]));
     cooldownSyms.current = {};
   }, []);
@@ -483,6 +561,7 @@ export default function App() {
   const busted = balance <= 0.5;
   const target = targetTrillion ? 1000000000000 : 1000000000;
   const won = balance >= target;
+  const runway = balance / apiCostPerDay;
 
   // Calculate biggest winner/loser
   const biggestWinner = Object.entries(tradeStats.wins).sort((a, b) => b[1] - a[1])[0];
@@ -490,6 +569,9 @@ export default function App() {
   const exits = trades.filter(t => t.pnl);
   const wins = exits.filter(t => parseFloat(t.pnl) > 0);
   const winRate = exits.length ? (wins.length / exits.length * 100) : 0;
+  const pmExits = pmTrades.length;
+  const pmWins = pmTrades.filter(t => t.type === 'PM_WIN').length;
+  const pmWinRate = pmExits > 0 ? (pmWins / pmExits * 100) : 0;
 
   const formatNumber = (num) => {
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
@@ -665,20 +747,6 @@ export default function App() {
   //   bear: t.red
   // };
 
-  // Mode switcher
-  if (mode === 'survival') {
-    return (
-      <div style={{ minHeight: '100dvh', background: t.bg, color: t.text, fontFamily: font }}>
-        <header style={{ padding: '10px 16px', borderBottom: `1px solid ${t.border}` }}>
-          <button onClick={() => setMode('simulator')} style={{ background: t.surface, border: 'none', padding: '8px 16px', color: t.text, cursor: 'pointer', borderRadius: 6 }}>
-            ← Back to Simulator
-          </button>
-        </header>
-        <SurvivalMode />
-      </div>
-    );
-  }
-
   return (
     <div style={{ minHeight: '100dvh', background: t.bg, color: t.text, fontFamily: font }}>
       {/* Header */}
@@ -687,10 +755,7 @@ export default function App() {
           <a href="https://heyitsmejosh.com" style={{ color: t.textSecondary, textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>~</a>
           <span style={{ color: t.textTertiary, fontSize: 13 }}>/</span>
           <span style={{ color: t.text, fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>bread</span>
-          <button onClick={() => setMode('survival')} style={{ marginLeft: 10, background: t.accent, border: 'none', padding: '4px 8px', color: '#fff', fontSize: 11, borderRadius: 4, cursor: 'pointer' }}>
-            SURVIVAL MODE
-          </button>
-          <span style={{ width: 1, height: 14, background: t.border, marginLeft: 4 }} />
+          <span style={{ width: 1, height: 14, background: t.border, marginLeft: 8 }} />
           <StatusBar t={t} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -806,6 +871,12 @@ export default function App() {
                 <div style={{ fontSize: 11, color: t.textTertiary, marginTop: 4 }}>
                   Time: {formatTime(elapsedTime)} {position && `• Position: ${formatNumber(position.size * position.entry).replace('$', '')} in ${position.sym}`}
                 </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: t.textTertiary, marginTop: 4, paddingTop: 4, borderTop: `1px solid ${t.border}` }}>
+                  <span>PM: {pmExits} trades ({pmWinRate.toFixed(0)}% wins) • {pmBalance >= 0 ? '+' : ''}{formatNumber(pmBalance).replace('$', '')}</span>
+                  <span style={{ color: runway < 30 ? t.red : runway < 90 ? t.yellow : t.green }}>
+                    Runway: {runway.toFixed(0)}d (${apiCostPerDay}/day)
+                  </span>
+                </div>
               </div>
             )}
 
@@ -864,17 +935,25 @@ export default function App() {
 
             <div style={{ background: t.surface, borderRadius: 12, overflow: 'hidden' }}>
               <button onClick={() => setShowTrades(!showTrades)} style={{ width: '100%', padding: 12, background: 'transparent', border: 'none', display: 'flex', justifyContent: 'space-between', fontFamily: font, fontSize: 13, color: t.textTertiary, cursor: 'pointer' }}>
-                <span>trades ({exits.length})</span>
+                <span>all trades ({exits.length}) • stocks: {exits.length - pmExits} • PM: {pmExits}</span>
                 <span>{showTrades ? '−' : '+'}</span>
               </button>
               {showTrades && (
-                <div style={{ padding: '0 12px 12px', maxHeight: 120, overflow: 'auto' }}>
+                <div style={{ padding: '0 12px 12px', maxHeight: 180, overflow: 'auto' }}>
                   {trades.length === 0 ? (
                     <div style={{ color: t.textTertiary, fontSize: 12, textAlign: 'center', padding: 8 }}>waiting...</div>
                   ) : (
-                    [...trades].reverse().slice(0, 15).map((tr, i) => (
+                    [...trades].reverse().slice(0, 20).map((tr, i) => (
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: `1px solid ${t.border}` }}>
-                        <span style={{ color: tr.type === 'BUY' ? t.accent : parseFloat(tr.pnl) >= 0 ? t.green : t.red }}>
+                        <span style={{
+                          color: tr.type === 'BUY' ? t.accent :
+                                tr.type.startsWith('PM_') ? t.cyan :
+                                parseFloat(tr.pnl) >= 0 ? t.green : t.red,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4
+                        }}>
+                          {tr.type.startsWith('PM_') && <span style={{ fontSize: 9, opacity: 0.6 }}>🎲</span>}
                           {tr.type} {tr.sym}
                         </span>
                         {tr.pnl && <span style={{ color: parseFloat(tr.pnl) >= 0 ? t.green : t.red }}>{parseFloat(tr.pnl) >= 0 ? '+' : ''}{tr.pnl}</span>}
