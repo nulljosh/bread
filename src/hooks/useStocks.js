@@ -114,21 +114,9 @@ export function useStocks(symbols = DEFAULT_SYMBOLS) {
         throw new Error('Invalid symbols: must be a non-empty array');
       }
 
-      // Try FMP first (most reliable, 250 req/day free)
-      let raw;
-      try {
-        raw = await fetchWithRetry(`/api/stocks-fmp?symbols=${symbols.join(',')}`);
-      } catch (fmpErr) {
-        console.warn('FMP API failed, trying Polygon...', fmpErr.message);
-        // Fallback to Polygon (5 req/min free)
-        try {
-          raw = await fetchWithRetry(`/api/stocks-polygon?symbols=${symbols.join(',')}`);
-        } catch (polygonErr) {
-          console.warn('Polygon API failed, trying original Yahoo...', polygonErr.message);
-          // Last resort: original Yahoo endpoint
-          raw = await fetchWithRetry(`/api/stocks?symbols=${symbols.join(',')}`);
-        }
-      }
+      // Use 100% free Yahoo Chart API (no auth needed!)
+      const raw = await fetchWithRetry(`/api/stocks-free?symbols=${symbols.join(',')}`);
+
 
       const stockMap = parseStockData(raw);
       if (!stockMap) throw new Error('No valid stock data received from any API');
