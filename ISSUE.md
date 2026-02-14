@@ -30,6 +30,11 @@ Manually update FALLBACK_DATA in `src/hooks/useStocks.js` with current prices
 **Recommended Fix:** 
 Implement Financial Modeling Prep API as primary source, keep Yahoo as fallback.
 
+**Quick Fix Created:**
+- Added `api/stocks-fmp.js` as alternative endpoint
+- To use: Change `useStocks` hook to call `/api/stocks-fmp` instead of `/api/stocks`
+- Requires FMP_API_KEY env var on Vercel (free tier: 250 req/day)
+
 **Files to update:**
 - `api/stocks.js` - Add FMP endpoint
 - `src/hooks/useStocks.js` - Update fetch logic
