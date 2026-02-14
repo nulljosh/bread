@@ -114,16 +114,31 @@ export function useStocks(symbols = DEFAULT_SYMBOLS) {
         throw new Error('Invalid symbols: must be a non-empty array');
       }
 
-      const raw = await fetchWithRetry(`/api/stocks?symbols=${symbols.join(',')}`);
+      // Try FMP first (most reliable, 250 req/day free)
+      let raw;
+      try {
+        raw = await fetchWithRetry(`/api/stocks-fmp?symbols=${symbols.join(',')}`);
+      } catch (fmpErr) {
+        console.warn('FMP API failed, trying Polygon...', fmpErr.message);
+        // Fallback to Polygon (5 req/min free)
+        try {
+          raw = await fetchWithRetry(`/api/stocks-polygon?symbols=${symbols.join(',')}`);
+        } catch (polygonErr) {
+          console.warn('Polygon API failed, trying original Yahoo...', polygonErr.message);
+          // Last resort: original Yahoo endpoint
+          raw = await fetchWithRetry(`/api/stocks?symbols=${symbols.join(',')}`);
+        }
+      }
+
       const stockMap = parseStockData(raw);
-      if (!stockMap) throw new Error('No valid stock data received');
+      if (!stockMap) throw new Error('No valid stock data received from any API');
 
       setStocks(stockMap);
       setError(null);
       retryCountRef.current = 0;
     } catch (err) {
       setError(err.message);
-      console.error('Stock fetch error:', err);
+      console.error('Stock fetch error (all APIs failed):', err);
       retryCountRef.current += 1;
 
       if (Object.keys(stocks).length === 0) {
