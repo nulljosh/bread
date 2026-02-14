@@ -357,11 +357,27 @@ export default function App() {
     if (best) {
       // Aggressive reduction at high balances to protect gains
       // With shares-based sizing, PnL scales correctly - can stay aggressive
-      const sizePercent = balance < 100 ? 0.80 :
-                         balance < 10000 ? 0.65 :
-                         balance < 1000000 ? 0.50 :
-                         balance < 100000000 ? 0.35 :
-                         0.25;
+      // $1T mode: Hyper-aggressive at fibonacci milestones beyond $1B
+      let sizePercent;
+      if (targetTrillion && balance >= 1e9) {
+        // Fibonacci scaling for $1B → $1T journey
+        if (balance >= 500e9) sizePercent = 0.45; // $500B+: aggressive final push
+        else if (balance >= 200e9) sizePercent = 0.40; // $200B+
+        else if (balance >= 100e9) sizePercent = 0.38; // $100B+
+        else if (balance >= 50e9) sizePercent = 0.35; // $50B+
+        else if (balance >= 20e9) sizePercent = 0.33; // $20B+
+        else if (balance >= 10e9) sizePercent = 0.32; // $10B+
+        else if (balance >= 5e9) sizePercent = 0.30; // $5B+
+        else if (balance >= 2e9) sizePercent = 0.28; // $2B+
+        else sizePercent = 0.25; // $1B-$2B: cautious start
+      } else {
+        // Standard scaling for $1B target or <$1B with $1T enabled
+        sizePercent = balance < 100 ? 0.80 :
+                      balance < 10000 ? 0.65 :
+                      balance < 1000000 ? 0.50 :
+                      balance < 100000000 ? 0.35 :
+                      0.25;
+      }
       const size = balance * sizePercent;
 
       // Convert dollars to shares (fixes PnL scaling across price ranges)
@@ -378,13 +394,22 @@ export default function App() {
         if (safeShares < shares * 0.5) return;
       }
 
+      // Scale take-profit higher at fibonacci milestones for $1T mode
+      let takeProfitMultiplier = 1.05; // Default 5%
+      if (targetTrillion && balance >= 1e9) {
+        if (balance >= 100e9) takeProfitMultiplier = 1.08; // $100B+: 8% TP
+        else if (balance >= 10e9) takeProfitMultiplier = 1.07; // $10B+: 7% TP
+        else if (balance >= 5e9) takeProfitMultiplier = 1.06; // $5B+: 6% TP
+        else takeProfitMultiplier = 1.055; // $1B-$5B: 5.5% TP
+      }
+
       try {
         setPosition({
           sym: best.sym,
           entry: best.price,
           size: shares, // NOW IN SHARES, not dollars
           stop: best.price * 0.983, // 1.7% stop loss
-          target: best.price * 1.05, // 5% take profit (R:R ~1:3)
+          target: best.price * takeProfitMultiplier,
         });
         setLastTraded(best.sym);
         setTrades(t => {
