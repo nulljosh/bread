@@ -24,8 +24,8 @@ export default async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.VERCEL_URL || 'https://bread-alpha.vercel.app'}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.VERCEL_URL || 'https://bread-alpha.vercel.app'}/pricing`,
+      success_url: `${process.env.VERCEL_URL || 'https://rise-production.vercel.app'}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.VERCEL_URL || 'https://rise-production.vercel.app'}/pricing`,
       allow_promotion_codes: true,
     });
 

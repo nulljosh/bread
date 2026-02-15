@@ -2,7 +2,7 @@
 
 ## ⚠️ DEPLOYMENT REMINDER
 **IMPORTANT:** When testing deployments, check the RIGHT URL:
-- **Vercel (Primary):** https://bread-alpha.vercel.app/ (production)
+- **Vercel (Primary):** https://rise-production.vercel.app/ (production)
 - **GitHub Pages:** https://heyitsmejosh.com/bread/ (static hosting, uses Vercel APIs)
 
 **Don't waste tokens checking GitHub Pages when you mean to check Vercel!**

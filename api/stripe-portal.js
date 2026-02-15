@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     // Create portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: process.env.VERCEL_URL || 'https://bread-alpha.vercel.app',
+      return_url: process.env.VERCEL_URL || 'https://rise-production.vercel.app',
     });
 
     res.status(200).json({ url: session.url });
