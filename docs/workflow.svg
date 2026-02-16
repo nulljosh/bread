@@ -1,99 +1,69 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
-  <defs>
-    <style>
-      .box { fill: rgba(255, 255, 255, 0.9); stroke: rgba(0, 0, 0, 0.2); stroke-width: 2; rx: 12; }
-      .box-success { fill: rgba(52, 199, 89, 0.2); stroke: rgba(52, 199, 89, 0.6); stroke-width: 2; rx: 12; }
-      .box-data { fill: rgba(0, 122, 255, 0.2); stroke: rgba(0, 122, 255, 0.6); stroke-width: 2; rx: 12; }
-      .box-trade { fill: rgba(255, 149, 0, 0.2); stroke: rgba(255, 149, 0, 0.6); stroke-width: 2; rx: 12; }
-      .text { fill: #1d1d1f; font-size: 15px; text-anchor: middle; font-weight: 500; }
-      .text-small { fill: #6e6e73; font-size: 12px; text-anchor: middle; font-weight: 400; }
-      .text-data { fill: #007aff; }
-      .text-trade { fill: #ff9500; }
-      .arrow { stroke: #86868b; stroke-width: 2; fill: none; }
-      .arrow-data { stroke: #007aff; stroke-width: 2; fill: none; }
-      .arrow-trade { stroke: #ff9500; stroke-width: 2; fill: none; }
-      .title { fill: #1d1d1f; font-size: 24px; font-weight: 600; text-anchor: middle; }
-    </style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <style>
+    .box { fill: #f5f5f7; stroke: #d2d2d7; stroke-width: 2; }
+    .box-data { fill: #e3f2fd; stroke: #2196f3; stroke-width: 2; }
+    .box-algo { fill: #fff3e0; stroke: #ff9800; stroke-width: 2; }
+    .box-success { fill: #e8f5e9; stroke: #4caf50; stroke-width: 2; }
+    .text { fill: #1d1d1f; font-size: 15px; font-weight: 600; text-anchor: middle; }
+    .sub { fill: #6e6e73; font-size: 12px; text-anchor: middle; }
+    .line { stroke: #86868b; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    .title { fill: #1d1d1f; font-size: 22px; font-weight: 700; text-anchor: middle; }
+  </style>
 
-    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#f5f5f7;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#e8e8ed;stop-opacity:1" />
-    </linearGradient>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#86868b"/>
+    </marker>
   </defs>
 
-  <rect width="900" height="900" fill="url(#bg)"/>
-  <text x="450" y="50" class="title">Rise - Trading Simulator</text>
-
-  <!-- Legend -->
-  <rect x="80" y="80" width="120" height="26" class="box-data" opacity="0.8"/>
-  <text x="140" y="98" class="text-small text-data" font-weight="500">Data Source</text>
-  <rect x="210" y="80" width="120" height="26" class="box-trade" opacity="0.8"/>
-  <text x="270" y="98" class="text-small text-trade" font-weight="500">Trading Logic</text>
-  <rect x="340" y="80" width="120" height="26" class="box-success" opacity="0.8"/>
-  <text x="400" y="98" class="text-small" font-weight="500" fill="#34c759">Success</text>
-  <rect x="470" y="80" width="120" height="26" class="box" opacity="0.8"/>
-  <text x="530" y="98" class="text-small" font-weight="500">Processing</text>
+  <rect width="600" height="700" fill="#ffffff"/>
+  <text x="300" y="40" class="title">Rise Trading Flow</text>
 
   <!-- Data Sources -->
-  <rect x="50" y="140" width="200" height="60" class="box-data"/>
-  <text x="150" y="165" class="text text-data">Yahoo Finance</text>
-  <text x="150" y="185" class="text-small">61 assets, live prices</text>
+  <rect x="50" y="80" width="160" height="60" rx="12" class="box-data"/>
+  <text x="130" y="108" class="text">Yahoo Finance</text>
+  <text x="130" y="125" class="sub">61 assets</text>
 
-  <rect x="300" y="140" width="200" height="60" class="box-data"/>
-  <text x="400" y="165" class="text text-data">Polymarket</text>
-  <text x="400" y="185" class="text-small">Prediction markets</text>
+  <rect x="220" y="80" width="160" height="60" rx="12" class="box-data"/>
+  <text x="300" y="108" class="text">Polymarket</text>
+  <text x="300" y="125" class="sub">Markets data</text>
 
-  <rect x="550" y="140" width="200" height="60" class="box-data"/>
-  <text x="650" y="165" class="text text-data">Monte Carlo</text>
-  <text x="650" y="185" class="text-small">Bull/base/bear sims</text>
+  <rect x="390" y="80" width="160" height="60" rx="12" class="box-data"/>
+  <text x="470" y="108" class="text">Cache Layer</text>
+  <text x="470" y="125" class="sub">Vercel Blob</text>
 
   <!-- Convergence -->
-  <line x1="150" y1="200" x2="450" y2="260" class="arrow-data"/>
-  <line x1="400" y1="200" x2="450" y2="260" class="arrow-data"/>
-  <line x1="650" y1="200" x2="450" y2="260" class="arrow-data"/>
+  <line x1="130" y1="140" x2="300" y2="190" class="line"/>
+  <line x1="300" y1="140" x2="300" y2="190" class="line"/>
+  <line x1="470" y1="140" x2="300" y2="190" class="line"/>
 
-  <!-- Real-time Engine -->
-  <rect x="300" y="260" width="300" height="70" class="box"/>
-  <text x="450" y="288" class="text">Real-Time Engine</text>
-  <text x="450" y="306" class="text-small">50ms tick rate</text>
-  <text x="450" y="320" class="text-small">Batched price updates</text>
-  <line x1="450" y1="330" x2="450" y2="360" class="arrow"/>
+  <!-- Real-Time Engine -->
+  <rect x="150" y="190" width="300" height="70" rx="12" class="box"/>
+  <text x="300" y="220" class="text">Real-Time Engine</text>
+  <text x="300" y="240" class="sub">50ms tick rate, batched updates</text>
+  <line x1="300" y1="260" x2="300" y2="290" class="line"/>
 
   <!-- Trading Algorithm -->
-  <rect x="300" y="360" width="300" height="80" class="box-trade"/>
-  <text x="450" y="390" class="text text-trade">Trading Algorithm</text>
-  <text x="450" y="408" class="text-small">Scan 61 assets for momentum</text>
-  <text x="450" y="422" class="text-small">1.0%+ moves, 75% position size</text>
-  <text x="450" y="436" class="text-small">1.8% stop loss, 4.2% take profit</text>
-  <line x1="450" y1="440" x2="450" y2="470" class="arrow-trade"/>
+  <rect x="150" y="290" width="300" height="80" rx="12" class="box-algo"/>
+  <text x="300" y="320" class="text">Trading Algorithm</text>
+  <text x="300" y="340" class="sub">Scan 61 assets for 1.0%+ momentum</text>
+  <text x="300" y="355" class="sub">1.8% SL | 4.2% TP | Trailing stops</text>
+  <line x1="300" y1="370" x2="300" y2="400" class="line"/>
 
   <!-- Risk Management -->
-  <rect x="300" y="470" width="300" height="70" class="box"/>
-  <text x="450" y="498" class="text">Risk Management</text>
-  <text x="450" y="516" class="text-small">Dynamic position sizing</text>
-  <text x="450" y="530" class="text-small">$1: 75% → $10M: 2%</text>
-  <line x1="450" y1="540" x2="450" y2="570" class="arrow"/>
+  <rect x="150" y="400" width="300" height="70" rx="12" class="box"/>
+  <text x="300" y="430" class="text">Risk Management</text>
+  <text x="300" y="450" class="sub">Dynamic sizing: 75% → 2% as balance grows</text>
+  <line x1="300" y1="470" x2="300" y2="500" class="line"/>
 
-  <!-- Execute Trade -->
-  <rect x="300" y="570" width="300" height="70" class="box-trade"/>
-  <text x="450" y="598" class="text text-trade">Execute Trade</text>
-  <text x="450" y="616" class="text-small">Fractional shares</text>
-  <text x="450" y="630" class="text-small">Trailing stops enabled</text>
-  <line x1="450" y1="640" x2="450" y2="670" class="arrow"/>
+  <!-- Execute -->
+  <rect x="150" y="500" width="300" height="70" rx="12" class="box-algo"/>
+  <text x="300" y="530" class="text">Execute Trade</text>
+  <text x="300" y="550" class="sub">Fractional shares, instant fill</text>
+  <line x1="300" y1="570" x2="300" y2="600" class="line"/>
 
-  <!-- Track Performance -->
-  <rect x="300" y="670" width="300" height="70" class="box-success"/>
-  <text x="450" y="698" class="text">Track Performance</text>
-  <text x="450" y="716" class="text-small">Win rate, P&amp;L, trade history</text>
-  <text x="450" y="730" class="text-small">Time-weighted returns</text>
-  <line x1="450" y1="740" x2="450" y2="770" class="arrow"/>
-
-  <!-- Win Condition -->
-  <rect x="300" y="770" width="300" height="70" class="box-success"/>
-  <text x="450" y="798" class="text">$1 → $1B Challenge</text>
-  <text x="450" y="816" class="text-small">Target: &lt;60 seconds</text>
-  <text x="450" y="830" class="text-small">Current: ~45s average</text>
-
-  <!-- Stats -->
-  <text x="450" y="875" class="text-small" font-weight="400">Bundle: 233KB | Memory: &lt;10MB | Win Rate: ~70%</text>
+  <!-- Track -->
+  <rect x="150" y="600" width="300" height="70" rx="12" class="box-success"/>
+  <text x="300" y="630" class="text">Performance Tracking</text>
+  <text x="300" y="650" class="sub">Win rate: ~70% | Target: $1 → $1B in <60s</text>
 </svg>
