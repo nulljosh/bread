@@ -25,7 +25,7 @@
   <text x="110" y="218" text-anchor="middle" class="sub">Cache layer</text>
 
   <!-- Center: Core -->
-  <rect x="250" y="90" width="200" height="120" rx="8" class="box core"/>
+  <rect x="230" y="90" width="240" height="120" rx="8" class="box core"/>
   <text x="350" y="115" text-anchor="middle" class="title text-white">Rise Engine</text>
   <text x="350" y="140" text-anchor="middle" class="sub text-white">Monte Carlo (5K paths)</text>
   <text x="350" y="160" text-anchor="middle" class="sub text-white">Trading Algorithm</text>
