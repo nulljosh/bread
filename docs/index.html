@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rise - Financial Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #f5f5f7;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 18px;
+            padding: 3rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1d1d1f;
+        }
+        .subtitle {
+            font-size: 1.25rem;
+            color: #6e6e73;
+            margin-bottom: 2rem;
+        }
+        .cta {
+            display: inline-block;
+            background: #0071e3;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 3rem;
+            transition: background 0.2s;
+        }
+        .cta:hover {
+            background: #0077ed;
+        }
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: #1d1d1f;
+        }
+        ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+        li {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #0071e3;
+        }
+        code {
+            background: #f5f5f7;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #1d1d1f;
+            color: #f5f5f7;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .stat {
+            text-align: center;
+            padding: 1rem;
+            background: #f5f5f7;
+            border-radius: 8px;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0071e3;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6e6e73;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rise</h1>
+        <p class="subtitle">Low-latency financial terminal with prediction markets and quantitative analysis</p>
+
+        <a href="https://rise-production.vercel.app" class="cta">Launch App</a>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">233KB</div>
+                <div class="stat-label">Bundle Size</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">&lt;10MB</div>
+                <div class="stat-label">Memory</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">50ms</div>
+                <div class="stat-label">Tick Rate</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">61</div>
+                <div class="stat-label">Assets</div>
+            </div>
+        </div>
+
+        <h2>Features</h2>
+        <ul>
+            <li>Trading Simulator: $1 → $1B in &lt;60s with autonomous algorithm</li>
+            <li>Prediction Markets: Real-time Polymarket feeds with probability filters</li>
+            <li>Monte Carlo: 5K-path simulations with bull/base/bear scenarios</li>
+            <li>Live Data: Yahoo Finance stocks, commodities, crypto via CoinGecko</li>
+            <li>Vercel Blob Cache: Daily updates at 8 AM UTC for instant load</li>
+        </ul>
+
+        <h2>Quick Start</h2>
+        <pre><code>git clone https://github.com/nulljosh/rise.git
+cd rise
+npm install
+npm run dev</code></pre>
+
+        <h2>Tech Stack</h2>
+        <ul>
+            <li>React 19 + Vite</li>
+            <li>Recharts for visualization</li>
+            <li>Polymarket + Yahoo Finance APIs</li>
+            <li>Custom Monte Carlo engine</li>
+            <li>Vercel deployment with Blob storage</li>
+        </ul>
+
+        <h2>Philosophy</h2>
+        <p><strong>The 10MB Dashboard</strong> - Every feature must justify its bytes. Speed is sacred, latency kills alpha.</p>
+
+        <h2>Links</h2>
+        <ul>
+            <li><a href="https://rise-production.vercel.app">Live App</a></li>
+            <li><a href="https://github.com/nulljosh/rise">GitHub</a></li>
+            <li><a href="https://github.com/nulljosh/rise/issues">Issues</a></li>
+            <li><a href="https://github.com/nulljosh/rise/discussions">Discussions</a></li>
+        </ul>
+    </div>
+</body>
+</html>
