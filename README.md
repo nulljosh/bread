@@ -34,12 +34,12 @@ Opens at http://localhost:5173
 
 ## Architecture Goals
 
-| Metric | Target | Current | Met |
-|--------|--------|---------|-----|
-| Bundle Size | <500KB | 233KB | Yes |
-| Memory | <10MB | ~177KB | Yes |
-| API Latency | <100ms | ~200ms | No |
-| React Warnings | 0 | 0 | Yes |
+| Metric | Target | Current |
+|--------|--------|---------|
+| Bundle Size | <500KB | 233KB |
+| Memory | <10MB | ~177KB |
+| API Latency | <100ms | ~200ms |
+| React Warnings | 0 | 0 |
 
 ## Development
 
