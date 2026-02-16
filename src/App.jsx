@@ -391,8 +391,11 @@ export default function App() {
       // $1T mode: Hyper-aggressive at fibonacci milestones beyond $1B
       let sizePercent;
       if (targetTrillion && balance >= 1e9) {
-        // Fibonacci scaling for $1B → $1T journey
-        if (balance >= 500e9) sizePercent = 0.45; // $500B+: aggressive final push
+        // Fibonacci scaling for $1B → $10T journey
+        if (balance >= 5e12) sizePercent = 0.35; // $5T+
+        else if (balance >= 2e12) sizePercent = 0.38; // $2T-$5T
+        else if (balance >= 1e12) sizePercent = 0.40; // $1T-$2T
+        else if (balance >= 500e9) sizePercent = 0.45; // $500B-$1T: aggressive final push
         else if (balance >= 200e9) sizePercent = 0.40; // $200B+
         else if (balance >= 100e9) sizePercent = 0.38; // $100B+
         else if (balance >= 50e9) sizePercent = 0.35; // $50B+
