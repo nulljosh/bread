@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('$1 → $1B in under 60 seconds', async ({ page }) => {
   test.setTimeout(180000); // 3 minute timeout
   // Go to production URL
-  await page.goto('https://bread-ebfan4v9b-nulljosh-9577s-projects.vercel.app');
+  await page.goto('https://rise-production.vercel.app/');
 
   // Wait for app to load
   await page.waitForSelector('button:has-text("Start")');

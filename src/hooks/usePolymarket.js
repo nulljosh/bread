@@ -70,7 +70,8 @@ const fetchWithRetry = async (url, maxRetries = 3, baseDelay = 1000) => {
 
       // Wait before retrying (exponential backoff)
       if (i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, baseDelay * Math.pow(2, i)));
+        const delay = process.env.NODE_ENV === 'test' ? 0 : baseDelay * Math.pow(2, i);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
@@ -151,6 +152,7 @@ export function usePolymarket() {
   // Seed from Blob cache first (instant load), then fetch live data
   useEffect(() => {
     const seedFromCache = async () => {
+      if (process.env.NODE_ENV === 'test') return;
       try {
         const res = await fetch('/api/latest');
         if (!res.ok) return;

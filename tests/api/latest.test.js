@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import handler from '../../api/latest.js';
+import { list } from '@vercel/blob';
 
 // Mock Vercel Blob
 vi.mock('@vercel/blob', () => ({
@@ -134,15 +135,12 @@ describe('Latest API - No Cache', () => {
   });
 
   it('should handle missing cache gracefully', async () => {
-    // Re-import with modified mock
-    vi.doMock('@vercel/blob', () => ({
-      list: vi.fn(async () => ({ blobs: [] })),
-    }), { virtual: true });
+    list.mockResolvedValueOnce({ blobs: [] });
 
     await handler(req, res);
-    
+
     expect(res.status).toHaveBeenCalledWith(200);
-    
+
     const response = res.json.mock.calls[0][0];
     expect(response.cached).toBe(false);
     expect(response.data).toBeNull();
@@ -150,12 +148,10 @@ describe('Latest API - No Cache', () => {
   });
 
   it('should handle null blobs array', async () => {
-    vi.doMock('@vercel/blob', () => ({
-      list: vi.fn(async () => ({ blobs: null })),
-    }), { virtual: true });
+    list.mockResolvedValueOnce({ blobs: null });
 
     await handler(req, res);
-    
+
     const response = res.json.mock.calls[0][0];
     expect(response.cached).toBe(false);
   });

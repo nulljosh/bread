@@ -124,9 +124,15 @@ describe('Markets API', () => {
   });
 
   it('should handle network timeouts', async () => {
-    global.fetch.mockImplementationOnce(() =>
-      new Promise((resolve) => {
-        setTimeout(() => resolve({ ok: true, json: async () => [] }), 20000);
+    global.fetch.mockImplementationOnce((url, options) =>
+      new Promise((resolve, reject) => {
+        const timer = setTimeout(() => resolve({ ok: true, json: async () => [] }), 20000);
+        options?.signal?.addEventListener('abort', () => {
+          clearTimeout(timer);
+          const err = new Error('The operation was aborted');
+          err.name = 'AbortError';
+          reject(err);
+        });
       })
     );
 
@@ -134,7 +140,7 @@ describe('Markets API', () => {
 
     expect(statusCode).toBe(504);
     expect(jsonData.error).toBe('Request timeout');
-  });
+  }, 20000);
 
   it('should filter out invalid markets', async () => {
     const mockResponse = [

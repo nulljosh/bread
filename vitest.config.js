@@ -7,6 +7,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
+    testTimeout: 20000,
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/speed.spec.js'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

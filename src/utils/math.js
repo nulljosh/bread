@@ -42,10 +42,12 @@ export const calcFibTargets = (spot, low52, high52) => {
 
 // Format price for display
 export const formatPrice = p => {
-  if (p >= 10000) return `${(p / 1000).toFixed(1)}K`;
-  if (p >= 100) return p.toFixed(0);
-  if (p >= 1) return p.toFixed(2);
-  return p.toFixed(4);
+  const abs = Math.abs(p);
+  const sign = p < 0 ? '-' : '';
+  if (abs >= 1000) return `${sign}${(abs / 1000).toFixed(1)}K`;
+  if (abs >= 100)  return `${sign}${abs.toFixed(0)}`;
+  if (abs >= 10)   return `${sign}${abs.toFixed(2)}`;
+  return `${sign}${abs.toFixed(4)}`;
 };
 
 // Run Monte Carlo simulation
