@@ -742,16 +742,18 @@ const reset = useCallback(() => {
   //   bear: t.red
   // };
 
-  // P&L background tint: green when up, red when down
+  // P&L background tint: progressively greener from $1 → $1T
   const pnlBg = (() => {
     const base = t.bg;
-    if (!running || balance === 1) return base;
-    if (balance > 1) {
-      const opacity = Math.min(Math.log10(balance) / 9, 1) * 0.10;
-      return `linear-gradient(rgba(48,209,88,${opacity.toFixed(3)}),rgba(48,209,88,${opacity.toFixed(3)})),${base}`;
+    if (balance <= 0.5) {
+      // Busted: red
+      return `linear-gradient(rgba(255,69,58,0.12),rgba(255,69,58,0.12)),${base}`;
     }
-    const loss = Math.min((1 - balance) / 0.5, 1);
-    return `linear-gradient(rgba(255,69,58,${(loss * 0.08).toFixed(3)}),rgba(255,69,58,${(loss * 0.08).toFixed(3)})),${base}`;
+    if (balance < 1.001) return base;
+    // Log scale: $1=0, $1T=1
+    const progress = Math.min(Math.log10(balance) / Math.log10(1e12), 1);
+    const opacity = progress * 0.28; // 0% at $1, 28% at $1T
+    return `linear-gradient(rgba(48,209,88,${opacity.toFixed(3)}),rgba(48,209,88,${opacity.toFixed(3)})),${base}`;
   })();
 
   return (
