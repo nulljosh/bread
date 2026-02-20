@@ -206,6 +206,8 @@ export default function App() {
   const [showMacro, setShowMacro] = useState(false);
   const [pmCategory, setPmCategory] = useState('all');
   const [showHighProb, setShowHighProb] = useState(false);
+  const [show15Min, setShow15Min] = useState(false);
+  const [showSpotlight, setShowSpotlight] = useState(true);
   const [hoveredMarket, setHoveredMarket] = useState(null);
   const [tappedMarket, setTappedMarket] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -765,8 +767,12 @@ const reset = useCallback(() => {
     if (showHighProb) {
       filtered = filtered.filter(m => m.probability >= 0.90 || m.probability <= 0.10);
     }
+    if (show15Min) {
+      const cutoff = Date.now() + 30 * 60 * 1000; // next 30 min
+      filtered = filtered.filter(m => m.endDate && new Date(m.endDate).getTime() <= cutoff);
+    }
     return filtered;
-  }, [markets, pmCategory, showHighProb]);
+  }, [markets, pmCategory, showHighProb, show15Min]);
 
   // Live high-probability PM markets for Situation Monitor
   const pmEdges = useMemo(() => {
@@ -1144,6 +1150,37 @@ const reset = useCallback(() => {
             {/* Header */}
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: t.textSecondary, marginBottom: 14 }}>PREDICTIONS</div>
 
+            {/* Strategy Spotlight */}
+            {showSpotlight && (
+              <div style={{
+                background: dark ? 'rgba(0,212,106,0.08)' : 'rgba(0,180,90,0.06)',
+                border: `1px solid ${t.green}40`,
+                borderRadius: 8,
+                padding: '10px 12px',
+                marginBottom: 12,
+                position: 'relative',
+              }}>
+                <button
+                  onClick={() => setShowSpotlight(false)}
+                  aria-label="Dismiss spotlight"
+                  style={{ position: 'absolute', top: 6, right: 8, background: 'none', border: 'none', color: t.textTertiary, cursor: 'pointer', fontSize: 14, lineHeight: 1, fontFamily: font }}
+                >x</button>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: t.green, textTransform: 'uppercase', marginBottom: 4 }}>Strategy Spotlight</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: t.text, marginBottom: 3 }}>@sharbel — 93% win rate</div>
+                <div style={{ fontSize: 11, color: t.textSecondary, lineHeight: 1.5 }}>
+                  345W / 26L on 15-min markets. Focus: short-duration markets resolving within 30 min. High-volume, high-probability positions only.
+                </div>
+                <button
+                  onClick={() => { setShow15Min(true); setShowSpotlight(false); }}
+                  style={{
+                    marginTop: 8, padding: '4px 10px', borderRadius: 12,
+                    background: `${t.green}20`, border: `1px solid ${t.green}`,
+                    color: t.green, fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: font,
+                  }}
+                >Apply 15-min filter</button>
+              </div>
+            )}
+
             {/* Category filter pills */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, overflowX: 'auto', paddingBottom: 4 }}>
               {MARKET_CATEGORIES.map(cat => (
@@ -1162,6 +1199,13 @@ const reset = useCallback(() => {
                 color: showHighProb ? t.green : t.textTertiary,
                 fontSize: 11, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: font,
               }}>90%+ Easy $</button>
+              <button onClick={() => setShow15Min(!show15Min)} style={{
+                padding: '5px 10px', borderRadius: 16,
+                border: show15Min ? `1.5px solid ${t.cyan}` : `1px solid ${t.border}`,
+                background: show15Min ? `${t.cyan}15` : 'transparent',
+                color: show15Min ? t.cyan : t.textTertiary,
+                fontSize: 11, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: font,
+              }}>15 min</button>
             </div>
 
             {/* Market list */}
