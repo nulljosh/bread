@@ -742,19 +742,25 @@ const reset = useCallback(() => {
   //   bear: t.red
   // };
 
+  // Log-scale progress $1→$1T
+  const bgProgress = balance <= 0.5 ? 0 : balance < 1.001 ? 0 : Math.min(Math.log10(balance) / Math.log10(1e12), 1);
+
   // P&L background tint: progressively greener from $1 → $1T
   const pnlBg = (() => {
     const base = t.bg;
-    if (balance <= 0.5) {
-      // Busted: red
-      return `linear-gradient(rgba(255,69,58,0.12),rgba(255,69,58,0.12)),${base}`;
-    }
+    if (balance <= 0.5) return `linear-gradient(rgba(255,69,58,0.12),rgba(255,69,58,0.12)),${base}`;
     if (balance < 1.001) return base;
-    // Log scale: $1=0, $1T=1
-    const progress = Math.min(Math.log10(balance) / Math.log10(1e12), 1);
-    const opacity = progress * 0.28; // 0% at $1, 28% at $1T
+    const opacity = bgProgress * 0.28;
     return `linear-gradient(rgba(48,209,88,${opacity.toFixed(3)}),rgba(48,209,88,${opacity.toFixed(3)})),${base}`;
   })();
+
+  // Hero number text contrast: shadow deepens in dark mode, lifts in light mode
+  const heroTextShadow = dark
+    ? `0 2px ${Math.round(4 + bgProgress * 24)}px rgba(0,0,0,${(0.3 + bgProgress * 0.55).toFixed(2)})`
+    : bgProgress > 0.15 ? `0 1px 8px rgba(255,255,255,0.9)` : 'none';
+
+  // P&L positive color: stays readable in light mode as bg greens out
+  const pnlGreen = dark ? t.green : bgProgress > 0.2 ? '#0c6b27' : t.green;
 
   return (
     <div style={{ minHeight: '100dvh', background: pnlBg, color: t.text, fontFamily: font, transition: 'background 1s ease' }}>
@@ -845,11 +851,11 @@ const reset = useCallback(() => {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 'clamp(56px, 10vw, 112px)', fontWeight: 700, color: t.text, fontVariantNumeric: 'tabular-nums', letterSpacing: '-3px', lineHeight: 1 }}>
+              <div style={{ fontSize: 'clamp(56px, 10vw, 112px)', fontWeight: 700, color: t.text, fontVariantNumeric: 'tabular-nums', letterSpacing: '-3px', lineHeight: 1, textShadow: heroTextShadow }}>
                 {formatNumber(equity)}
               </div>
               <div style={{ fontSize: 15, marginTop: 12 }}>
-                <span style={{ color: pnl >= 0 ? t.green : t.red }}>
+                <span style={{ color: pnl >= 0 ? pnlGreen : t.red }}>
                   {pnl >= 0 ? '+' : ''}{formatNumber(Math.abs(pnl)).replace('$', '')}
                 </span>
                 {position
@@ -965,7 +971,7 @@ const reset = useCallback(() => {
               </div>
               <div>
                 <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', color: t.textTertiary, marginBottom: 3 }}>P&amp;L</div>
-                <div style={{ fontSize: 14, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: pnl >= 0 ? t.green : t.red }}>
+                <div style={{ fontSize: 14, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: pnl >= 0 ? pnlGreen : t.red }}>
                   {pnl >= 0 ? '+' : ''}{formatNumber(Math.abs(pnl)).replace('$', '')}
                 </div>
               </div>
