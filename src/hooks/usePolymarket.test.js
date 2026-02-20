@@ -8,11 +8,6 @@ global.fetch = vi.fn();
 describe('usePolymarket', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   it('should fetch markets successfully', async () => {

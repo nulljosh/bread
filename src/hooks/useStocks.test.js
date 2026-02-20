@@ -8,11 +8,6 @@ global.fetch = vi.fn();
 describe('useStocks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   it('should fetch stocks successfully', async () => {

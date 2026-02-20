@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import handler from '../../api/cron.js';
+import { put } from '@vercel/blob';
 
 // Mock Vercel Blob
 vi.mock('@vercel/blob', () => ({
@@ -157,14 +158,14 @@ describe('Cron Error Handling', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    // Mock a fetch failure
-    global.fetch = vi.fn(() => Promise.reject(new Error('Network error')));
+    // Make put throw so the main catch block is triggered
+    put.mockRejectedValueOnce(new Error('Blob upload failed'));
 
     await handler(req, res);
-    
+
     // Should return 200 with error info for proper Vercel logging
     expect(res.status).toHaveBeenCalledWith(200);
-    
+
     const response = res.json.mock.calls[0][0];
     expect(response.ok).toBe(false);
     expect(response.error).toBeDefined();
@@ -172,10 +173,10 @@ describe('Cron Error Handling', () => {
   });
 
   it('should include timing on error', async () => {
-    global.fetch = vi.fn(() => Promise.reject(new Error('Timeout')));
+    put.mockRejectedValueOnce(new Error('Blob upload failed'));
 
     await handler(req, res);
-    
+
     const response = res.json.mock.calls[0][0];
     expect(response.totalTime).toBeDefined();
     expect(typeof response.totalTime).toBe('number');
