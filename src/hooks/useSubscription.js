@@ -14,7 +14,7 @@ export function useSubscription() {
       return;
     }
 
-    fetch(`/api/subscription-status?customerId=${customerId}`)
+    fetch(`/api/stripe?action=status&customerId=${customerId}`)
       .then(r => r.json())
       .then(data => {
         setSubscription(data);

@@ -1,0 +1,75 @@
+import Stripe from 'stripe';
+import { kv } from '@vercel/kv';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Routes:
+//   POST ?action=checkout  { priceId }    → create checkout session
+//   POST ?action=portal    { customerId } → create billing portal session
+//   GET  ?action=status&customerId=...    → subscription status
+
+export default async function handler(req, res) {
+  const { action, customerId } = req.query;
+
+  // GET: subscription status
+  if (req.method === 'GET' && action === 'status') {
+    try {
+      if (!customerId) {
+        return res.status(200).json({ status: null, tier: 'free' });
+      }
+      const subscription = await kv.get(`sub:${customerId}`);
+      if (!subscription) {
+        return res.status(200).json({ status: null, tier: 'free' });
+      }
+      return res.status(200).json({
+        ...subscription,
+        tier: subscription.status === 'active' ? 'pro' : 'free',
+      });
+    } catch (err) {
+      console.error('[STRIPE/status] Error:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // POST: checkout
+  if (action === 'checkout') {
+    try {
+      const { priceId } = req.body;
+      if (!priceId) return res.status(400).json({ error: 'Price ID required' });
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${process.env.VERCEL_URL || 'https://rise-production.vercel.app'}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.VERCEL_URL || 'https://rise-production.vercel.app'}/pricing`,
+        allow_promotion_codes: true,
+      });
+      return res.status(200).json({ sessionId: session.id, url: session.url });
+    } catch (err) {
+      console.error('[STRIPE/checkout] Error:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // POST: portal
+  if (action === 'portal') {
+    try {
+      const { customerId: cid } = req.body;
+      if (!cid) return res.status(400).json({ error: 'Customer ID required' });
+      const session = await stripe.billingPortal.sessions.create({
+        customer: cid,
+        return_url: process.env.VERCEL_URL || 'https://rise-production.vercel.app',
+      });
+      return res.status(200).json({ url: session.url });
+    } catch (err) {
+      console.error('[STRIPE/portal] Error:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  return res.status(400).json({ error: 'Unknown action' });
+}

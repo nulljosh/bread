@@ -11,7 +11,7 @@ export default function PricingPage({ dark, t, onClose }) {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/stripe-checkout', {
+      const response = await fetch('/api/stripe?action=checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
