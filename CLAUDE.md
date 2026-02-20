@@ -582,24 +582,14 @@ fetch('/api/latest')
 
 ### Ticker Data Accuracy Issue
 
-**Problem:** Stock prices showing as outdated
+**Status (Feb 19, 2026):** Yahoo Finance Chart API (`v8/finance/chart`) working — uses different endpoint than the broken quote API.
 
-**Root Cause:** Yahoo Finance API returning 401 Unauthorized (as of Feb 13, 2026)
+**Root Cause (resolved):** Yahoo Finance Quote API returned 401 Unauthorized. The `api/stocks-free.js` switched to the Chart API which works without auth.
 
-**Current Status:**
-- API failing with 401, falling back to hardcoded data from Feb 6, 2026
-- Fallback data is 7+ days old
+**Fallback Data:** Updated to Feb 19, 2026 prices in `src/hooks/useStocks.js`.
 
-**Solutions:**
-1. **Fix Yahoo Finance API** - Add proper cookies/headers
-2. **Alternative API** (Recommended) - Financial Modeling Prep (250 free req/day)
-3. **Update Fallback** (Band-aid) - Manually update prices in `src/hooks/useStocks.js`
-
-**Quick Fix Created:**
-- Added `api/stocks-fmp.js` as alternative endpoint
-- Requires FMP_API_KEY env var on Vercel
-- To use: Change `useStocks` hook to call `/api/stocks-fmp`
+**Ticker rename:** Block Inc rebranded from `SQ` → `XYZ` in Jan 2025. DEFAULT_SYMBOLS and FALLBACK_DATA updated.
 
 ---
 
-**Last Updated**: 2026-02-14
+**Last Updated**: 2026-02-19
