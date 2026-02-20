@@ -21,6 +21,16 @@ styleSheet.textContent = `
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  .rise-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) {
+    .rise-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 `;
 if (!document.head.querySelector('#bloomberg-animations')) {
   styleSheet.id = 'bloomberg-animations';
