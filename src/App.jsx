@@ -2,13 +2,12 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { usePolymarket, MARKET_CATEGORIES } from './hooks/usePolymarket';
 import { useLivePrices, formatLastUpdated } from './hooks/useLivePrices';
 import { useStocks } from './hooks/useStocks';
-import { formatPrice } from './utils/math';
 import { getTheme } from './utils/theme';
 import { defaultAssets } from './utils/assets';
 import { saveRun, getStats } from './utils/runHistory';
 import { calculateKelly, detectEdge } from './utils/trading';
 import { tldr } from './utils/helpers';
-import { BlinkingDot, StatusBar, Card } from './components/ui';
+import { StatusBar, Card } from './components/ui';
 import Ticker from './components/Ticker';
 import PricingPage from './components/PricingPage';
 import BrokerPanel from './components/BrokerPanel';
@@ -172,7 +171,6 @@ export default function App() {
   const [trades, setTrades] = useState([]);
   const [running, setRunning] = useState(false);
   const [tick, setTick] = useState(0);
-  const [showTrades, setShowTrades] = useState(false);
   const [lastTraded, setLastTraded] = useState(null);
   const [perfMode, setPerfMode] = useState(true);
   const [startTime, setStartTime] = useState(null);
@@ -187,7 +185,6 @@ export default function App() {
   const [pmTrades, setPmTrades] = useState([]);
   const lastPmScan = useRef(0);
   const [pmBalance, setPmBalance] = useState(0); // Track prediction market P&L separately
-  const [showPmEdges, setShowPmEdges] = useState(true);
   const lastPmBetRef = useRef({}); // { marketId: timestamp }
 
   // Broker state
@@ -850,6 +847,21 @@ const reset = useCallback(() => {
 
   // P&L positive color: stays readable in light mode as bg greens out
   const pnlGreen = dark ? t.green : bgProgress > 0.2 ? '#0c6b27' : t.green;
+  const situationSim = {
+    equity: formatNumber(equity),
+    pnl: `${pnl >= 0 ? '+' : ''}${formatNumber(Math.abs(pnl)).replace('$', '')}`,
+    pnlPositive: pnl >= 0,
+    winRate: `${winRate.toFixed(0)}%`,
+    trades: exits.length,
+    position: position ? {
+      sym: position.sym,
+      color: ASSETS[position.sym].color,
+      entry: position.entry.toFixed(2),
+      unrealized: `${unrealized >= 0 ? '+' : ''}${unrealized.toFixed(2)}`,
+    } : null,
+    runtime: elapsedTime > 0 ? formatTime(elapsedTime) : '—',
+    allTime: runStats ? `${runStats.wins}W / ${runStats.losses}L` : null,
+  };
 
   return (
     <div style={{ minHeight: '100dvh', background: pnlBg, color: t.text, fontFamily: font, transition: 'background 1s ease' }}>
