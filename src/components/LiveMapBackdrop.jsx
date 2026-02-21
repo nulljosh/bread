@@ -1,12 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const DEFAULT_CENTER = { lat: 40.7128, lon: -74.0060 };
+const LAST_GEO_KEY = 'rise_last_geo';
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.DEV ? 'https://rise-production.vercel.app' : '');
 
 function apiPath(path) {
   return `${API_BASE}${path}`;
+}
+
+function loadStoredGeo() {
+  try {
+    const raw = localStorage.getItem(LAST_GEO_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.lat !== 'number' || typeof parsed?.lon !== 'number') return null;
+    return { lat: parsed.lat, lon: parsed.lon, label: parsed.label || 'Last known location' };
+  } catch {
+    return null;
+  }
 }
 
 const GEO_KEYWORDS = [
@@ -67,15 +80,16 @@ function trafficColor(incident) {
 }
 
 export default function LiveMapBackdrop({ dark }) {
+  const storedGeo = loadStoredGeo();
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const sawGeoGrantedRef = useRef(false);
-  const [center, setCenter] = useState(DEFAULT_CENTER);
-  const [userPosition, setUserPosition] = useState(DEFAULT_CENTER);
+  const [center, setCenter] = useState(storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : DEFAULT_CENTER);
+  const [userPosition, setUserPosition] = useState(storedGeo ? { lat: storedGeo.lat, lon: storedGeo.lon } : DEFAULT_CENTER);
   const [centerReady] = useState(true);
-  const [locLabel, setLocLabel] = useState('Locating…');
-  const [geoState, setGeoState] = useState('checking');
+  const [locLabel, setLocLabel] = useState(storedGeo?.label || 'Locating…');
+  const [geoState, setGeoState] = useState(storedGeo ? 'cached' : 'checking');
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [] });
   const [selected, setSelected] = useState(null);
 
@@ -114,6 +128,14 @@ export default function LiveMapBackdrop({ dark }) {
     }
   }, []);
 
+  const persistGeo = useCallback((next, label) => {
+    try {
+      localStorage.setItem(LAST_GEO_KEY, JSON.stringify({ ...next, label, ts: Date.now() }));
+    } catch {
+      // ignore storage failures
+    }
+  }, []);
+
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setGeoState('unsupported');
@@ -126,8 +148,10 @@ export default function LiveMapBackdrop({ dark }) {
         setCenter(next);
         setUserPosition(next);
         mapInstanceRef.current?.flyTo({ center: [next.lon, next.lat], zoom: 11.5, offset: [0, 120], duration: 850 });
-        setLocLabel('Current location');
+        const label = 'Current location';
+        setLocLabel(label);
         setGeoState('granted');
+        persistGeo(next, label);
         try {
           localStorage.setItem('rise_geo_granted', '1');
           sawGeoGrantedRef.current = true;
@@ -144,9 +168,11 @@ export default function LiveMapBackdrop({ dark }) {
           if (json && typeof json.latitude === 'number' && typeof json.longitude === 'number') {
             const next = { lat: json.latitude, lon: json.longitude };
             setCenter(next);
-            setUserPosition(next);
+            if (geoErr?.code !== 1) setUserPosition(next);
             mapInstanceRef.current?.flyTo({ center: [next.lon, next.lat], zoom: 11.5, offset: [0, 120], duration: 850 });
-            setLocLabel(json.city ? `${json.city} (IP)` : 'IP fallback');
+            const label = json.city ? `${json.city} (IP)` : 'IP fallback';
+            setLocLabel(label);
+            persistGeo(next, label);
           } else {
             setLocLabel('Location unavailable');
           }
@@ -157,7 +183,7 @@ export default function LiveMapBackdrop({ dark }) {
       },
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
     );
-  }, []);
+  }, [persistGeo]);
 
   useEffect(() => {
     requestLocation();
