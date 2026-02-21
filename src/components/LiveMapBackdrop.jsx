@@ -369,7 +369,7 @@ export default function LiveMapBackdrop({ dark }) {
           markersRef.current.push(
             new maplibregl.Marker({
               element: makePulse(
-                'width:16px;height:16px;background:#ff3b30;border:2px solid rgba(255,255,255,0.96);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 10px rgba(0,0,0,0.35);',
+                'width:18px;height:24px;background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 32\'><path d=\'M12 0C5.4 0 0 5.4 0 12c0 8.8 12 20 12 20s12-11.2 12-20C24 5.4 18.6 0 12 0z\' fill=\'%23ff3b30\'/><circle cx=\'12\' cy=\'12\' r=\'5\' fill=\'white\'/></svg>");background-size:contain;background-repeat:no-repeat;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.35));',
                 'you',
                 userData
               ),
