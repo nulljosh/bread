@@ -29,6 +29,8 @@ const DEFAULT_SYMBOLS = [
   'COIN', 'PLTR', 'HOOD', 'HIMS', 'SHOP', 'RKLB', 'SOFI', 'IBM', 'IWM',
   // Commodity futures
   'GC=F', 'SI=F', 'CL=F',
+  // Cramer tracker ETFs + benchmark
+  'SPY', 'SJIM', 'LJIM',
 ];
 
 // Retry helper with exponential backoff
@@ -178,6 +180,10 @@ const FALLBACK_DATA = {
   'GC=F': { symbol: 'GC=F',  price: 2942.60, changePercent: 0.38 },
   'SI=F': { symbol: 'SI=F',  price: 32.84,   changePercent: 0.61 },
   'CL=F': { symbol: 'CL=F',  price: 72.40,   changePercent: 0.28 },
+  // Cramer tracker ETFs + benchmark
+  SPY:    { symbol: 'SPY',   price: 596.80,  changePercent: 0.14 },
+  SJIM:   { symbol: 'SJIM',  price: 21.40,   changePercent: 0.31 },
+  LJIM:   { symbol: 'LJIM',  price: 20.10,   changePercent: -0.44 },
 };
 
 // Parse stock data from either serverless array or Yahoo quoteResponse format
