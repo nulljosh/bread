@@ -44,6 +44,7 @@ export default function LiveMapBackdrop({ dark }) {
   const [centerReady, setCenterReady] = useState(false);
   const [locLabel, setLocLabel] = useState('Locating…');
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [] });
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -162,10 +163,17 @@ export default function LiveMapBackdrop({ dark }) {
         markersRef.current.forEach(m => m.remove());
         markersRef.current = [];
 
-        const makePulse = (css, title) => {
+        const makePulse = (css, title, data) => {
           const el = document.createElement('div');
           el.style.cssText = css;
           if (title) el.title = title;
+          if (data) {
+            el.addEventListener('mouseenter', () => setSelected(data));
+            el.addEventListener('click', (e) => {
+              e.stopPropagation();
+              setSelected(data);
+            });
+          }
           return el;
         };
 
@@ -173,7 +181,9 @@ export default function LiveMapBackdrop({ dark }) {
         markersRef.current.push(
           new maplibregl.Marker({
             element: makePulse(
-              'width:18px;height:18px;border-radius:50%;background:#3B82F6;border:3px solid rgba(255,255,255,0.9);box-shadow:0 0 0 0 rgba(59,130,246,0.65);animation:pulse-blue 2s infinite;'
+              'width:18px;height:18px;border-radius:50%;background:#3B82F6;border:3px solid rgba(255,255,255,0.9);box-shadow:0 0 0 0 rgba(59,130,246,0.65);animation:pulse-blue 2s infinite;',
+              'you',
+              { type: 'location', title: 'You', detail: locLabel, level: 'local' }
             ),
           })
             .setLngLat([center.lon, center.lat])
@@ -183,7 +193,8 @@ export default function LiveMapBackdrop({ dark }) {
           new maplibregl.Marker({
             element: makePulse(
               'background:rgba(15,23,42,0.82);color:#fff;font:700 10px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);',
-              'you'
+              'you',
+              { type: 'location', title: 'You', detail: locLabel, level: 'local' }
             ),
             offset: [0, -18],
           })
@@ -197,7 +208,8 @@ export default function LiveMapBackdrop({ dark }) {
             new maplibregl.Marker({
               element: makePulse(
                 'width:11px;height:11px;border-radius:50%;background:#F59E0B;box-shadow:0 0 0 0 rgba(245,158,11,0.55);animation:pulse-amber 1.8s infinite;',
-                inc.description || inc.type
+                inc.description || inc.type,
+                { type: 'construction', title: (inc.type || 'construction').toUpperCase(), detail: inc.description || 'Road/area incident', level: 'local' }
               ),
             })
               .setLngLat([inc.lon, inc.lat])
@@ -212,7 +224,8 @@ export default function LiveMapBackdrop({ dark }) {
             new maplibregl.Marker({
               element: makePulse(
                 'width:10px;height:10px;border-radius:50%;background:#F97316;box-shadow:0 0 0 0 rgba(249,115,22,0.55);animation:pulse-amber 1.6s infinite;',
-                inc.description || inc.type || 'traffic incident'
+                inc.description || inc.type || 'traffic incident',
+                { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local' }
               ),
             })
               .setLngLat([p.lon, p.lat])
@@ -227,7 +240,13 @@ export default function LiveMapBackdrop({ dark }) {
             new maplibregl.Marker({
               element: makePulse(
                 `width:${size}px;height:${size}px;border-radius:50%;background:rgba(239,68,68,0.78);box-shadow:0 0 0 0 rgba(239,68,68,0.5);animation:pulse-red 1.9s infinite;`,
-                `M${eq.mag} ${eq.place || ''}`
+                `M${eq.mag} ${eq.place || ''}`,
+                {
+                  type: 'seismic',
+                  title: `M${eq.mag?.toFixed?.(1) ?? eq.mag}`,
+                  detail: eq.place || 'Earthquake',
+                  level: (eq.mag || 0) >= 6 ? 'high' : (eq.mag || 0) >= 4 ? 'elevated' : 'monitor',
+                }
               ),
             })
               .setLngLat([eq.lon, eq.lat])
@@ -243,7 +262,8 @@ export default function LiveMapBackdrop({ dark }) {
             new maplibregl.Marker({
               element: makePulse(
                 'width:8px;height:8px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
-                ev.title
+                ev.title,
+                { type: 'event', title: ev.country ? `[${ev.country}]` : 'Global Event', detail: ev.title, level: 'global', link: ev.url || null }
               ),
             })
               .setLngLat([offsetLon, offsetLat])
@@ -260,7 +280,14 @@ export default function LiveMapBackdrop({ dark }) {
             new maplibregl.Marker({
               element: makePulse(
                 `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};box-shadow:0 0 0 0 rgba(34,197,94,0.4);animation:pulse-cyan 2.4s infinite;`,
-                `${Math.round(prob * 100)}% · ${m.question || 'market'}`
+                `${Math.round(prob * 100)}% · ${m.question || 'market'}`,
+                {
+                  type: 'prediction',
+                  title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`,
+                  detail: m.question || 'Prediction market',
+                  level: p.label,
+                  link: `https://polymarket.com/event/${m.eventSlug || m.slug}`,
+                }
               ),
             })
               .setLngLat([p.lon, p.lat])
@@ -320,6 +347,47 @@ export default function LiveMapBackdrop({ dark }) {
       >
         YOU · {locLabel}
       </button>
+
+      {selected && (
+        <div
+          style={{
+            position: 'fixed',
+            right: 14,
+            bottom: 52,
+            zIndex: 3,
+            width: 320,
+            maxWidth: 'calc(100vw - 28px)',
+            border: '1px solid rgba(255,255,255,0.24)',
+            borderRadius: 12,
+            background: 'rgba(2,6,23,0.84)',
+            color: '#fff',
+            padding: '10px 12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <div style={{ font: '700 12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace' }}>{selected.title}</div>
+            <button
+              onClick={() => setSelected(null)}
+              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
+            >
+              x
+            </button>
+          </div>
+          <div style={{ marginTop: 4, color: '#cbd5e1', fontSize: 11, lineHeight: 1.45 }}>{selected.detail}</div>
+          <div style={{ marginTop: 6, fontSize: 10, color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{selected.level}</div>
+          {selected.link && (
+            <a
+              href={selected.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-block', marginTop: 8, color: '#60a5fa', fontSize: 11, textDecoration: 'underline' }}
+            >
+              Open source link →
+            </a>
+          )}
+        </div>
+      )}
     </>
   );
 }
