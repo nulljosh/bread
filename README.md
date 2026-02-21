@@ -12,6 +12,8 @@ Fast financial terminal with live markets, prediction signals, and a paper-tradi
 - React 19 + Vite
 - Vercel serverless API (`api/`)
 - Polymarket + Yahoo Finance data
+- Situation Monitor map (flights, traffic, construction incidents, seismic)
+- Global geopolitical event feed (GDELT panel)
 - Vitest + Playwright tests
 
 ## Run
