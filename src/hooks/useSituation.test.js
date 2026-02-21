@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useSituation, WORLD_CITIES } from './useSituation';
 
 beforeEach(() => {
@@ -89,13 +89,15 @@ describe('useSituation', () => {
 
   it('loads flights on mount', async () => {
     const { result } = renderHook(() => useSituation());
-    await waitFor(() => expect(result.current.flights.length).toBeGreaterThan(0));
+    await act(async () => { await new Promise(r => setTimeout(r, 0)); });
+    expect(result.current.flights.length).toBeGreaterThan(0);
     expect(result.current.flights[0].callsign).toBe('AC123');
   });
 
   it('loads traffic on mount', async () => {
     const { result } = renderHook(() => useSituation());
-    await waitFor(() => expect(result.current.traffic).not.toBeNull());
+    await act(async () => { await new Promise(r => setTimeout(r, 0)); });
+    expect(result.current.traffic).not.toBeNull();
     expect(result.current.traffic.flow.congestion).toBe('moderate');
   });
 
@@ -119,7 +121,8 @@ describe('useSituation', () => {
     });
 
     const { result } = renderHook(() => useSituation());
-    await waitFor(() => expect(result.current.flightsError).toBeTruthy());
+    await act(async () => { await new Promise(r => setTimeout(r, 0)); });
+    expect(result.current.flightsError).toBeTruthy();
     expect(result.current.flights).toHaveLength(0);
   });
 
@@ -132,7 +135,8 @@ describe('useSituation', () => {
     });
 
     const { result } = renderHook(() => useSituation());
-    await waitFor(() => expect(result.current.trafficError).toBeTruthy());
+    await act(async () => { await new Promise(r => setTimeout(r, 0)); });
+    expect(result.current.trafficError).toBeTruthy();
     expect(result.current.traffic).toBeNull();
   });
 
@@ -145,7 +149,8 @@ describe('useSituation', () => {
     });
 
     const { result } = renderHook(() => useSituation());
-    await waitFor(() => expect(result.current.flights.length).toBeGreaterThan(0));
+    await act(async () => { await new Promise(r => setTimeout(r, 0)); });
+    expect(result.current.flights.length).toBeGreaterThan(0);
     expect(result.current.activeCenter.lat).toBeTypeOf('number');
     expect(result.current.activeCenter.lon).toBeTypeOf('number');
   });
