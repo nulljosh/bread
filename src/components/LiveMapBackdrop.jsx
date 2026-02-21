@@ -356,7 +356,7 @@ export default function LiveMapBackdrop({ dark }) {
           return el;
         };
 
-        // User pin + label
+        // User pin (red drop-pin style)
         const userData = {
           type: 'location',
           title: 'You',
@@ -369,22 +369,10 @@ export default function LiveMapBackdrop({ dark }) {
           markersRef.current.push(
             new maplibregl.Marker({
               element: makePulse(
-                'width:18px;height:18px;border-radius:50%;background:#3B82F6;border:3px solid rgba(255,255,255,0.9);box-shadow:0 0 0 0 rgba(59,130,246,0.65);animation:pulse-blue 2s infinite;',
+                'width:16px;height:16px;background:#ff3b30;border:2px solid rgba(255,255,255,0.96);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 10px rgba(0,0,0,0.35);',
                 'you',
                 userData
               ),
-            })
-              .setLngLat([userPosition.lon, userPosition.lat])
-              .addTo(mapInstanceRef.current)
-          );
-          markersRef.current.push(
-            new maplibregl.Marker({
-              element: makePulse(
-                'background:rgba(15,23,42,0.82);color:#fff;font:700 10px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);',
-                'you',
-                userData
-              ),
-              offset: [0, -18],
             })
               .setLngLat([userPosition.lon, userPosition.lat])
               .addTo(mapInstanceRef.current)
@@ -612,21 +600,27 @@ export default function LiveMapBackdrop({ dark }) {
           }
           mapInstanceRef.current?.flyTo({ center: [userPosition.lon, userPosition.lat], zoom: GEO_DETAIL_ZOOM, offset: [0, 120], duration: 900 });
         }}
+        aria-label="Recenter to my location"
+        title="Recenter to my location"
         style={{
           position: 'fixed',
           right: 14,
           bottom: 14,
           zIndex: 2,
-          border: '1px solid rgba(16,185,129,0.5)',
-          borderRadius: 999,
-          background: 'rgba(2,6,23,0.86)',
-          color: '#86efac',
-          font: '600 11px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace',
-          padding: '6px 10px',
+          width: 34,
+          height: 34,
+          border: '1px solid rgba(255,255,255,0.24)',
+          borderRadius: 9999,
+          background: 'rgba(2,6,23,0.82)',
+          color: '#ff5a52',
+          font: '700 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           cursor: 'pointer',
         }}
       >
-        {geoState === 'granted' ? `YOU · ${locLabel}` : 'ENABLE LOCATION'}
+        ⌖
       </button>
 
       {selected && (
