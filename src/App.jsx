@@ -146,7 +146,7 @@ const categoryKeywords = {
 export default function App() {
   const [dark, setDark] = useState(true);
   const [mapFocus, setMapFocus] = useState(false);
-  const [hideSimulator, setHideSimulator] = useState(false);
+  const [hideSimulator, setHideSimulator] = useState(true);
   const t = getTheme(dark);
   const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
   const [showPricing, setShowPricing] = useState(false);
@@ -1004,13 +1004,6 @@ const reset = useCallback(() => {
 
         {/* Map-first mode: removed tile views; data is projected directly on the live map. */}
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', padding: '24px 0 16px', fontSize: 10, color: t.textTertiary }}>
-          &copy; 2026 &middot;{' '}
-          <a href="https://heyitsmejosh.com" target="_blank" rel="noopener noreferrer" style={{ color: t.textSecondary, textDecoration: 'none' }}>
-            Portfolio
-          </a>
-        </div>
       </div>
 
       {/* Pricing Modal */}
@@ -1061,6 +1054,13 @@ const reset = useCallback(() => {
       >
         {hideSimulator ? 'SHOW SIMULATOR' : 'HIDE SIMULATOR'}
       </button>
+
+      <footer style={{ position: 'fixed', left: 0, right: 0, bottom: 8, zIndex: 2, textAlign: 'center', fontSize: 10, color: t.textTertiary, pointerEvents: 'auto' }}>
+        &copy; 2026 &middot;{' '}
+        <a href="https://heyitsmejosh.com" target="_blank" rel="noopener noreferrer" style={{ color: t.textSecondary, textDecoration: 'none' }}>
+          Portfolio
+        </a>
+      </footer>
 
       {/* Market tooltip */}
       {(hoveredMarket || tappedMarket) && (() => {
