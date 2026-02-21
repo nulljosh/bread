@@ -12,6 +12,13 @@ export const WORLD_CITIES = [
 const FLIGHT_REFRESH    = 15_000;
 const TRAFFIC_REFRESH   = 60_000;
 const SITUATION_REFRESH = 5 * 60_000;
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? 'https://rise-production.vercel.app' : '');
+
+function apiPath(path) {
+  return `${API_BASE}${path}`;
+}
 
 function bboxFromCenter(lat, lon, deg = 2) {
   return { lamin: lat - deg, lomin: lon - deg, lamax: lat + deg, lomax: lon + deg };
@@ -71,7 +78,7 @@ export function useSituation() {
     const bbox = bboxFromCenter(activeCenter.lat, activeCenter.lon);
     try {
       const data = await fetchWithTimeout(
-        `/api/flights?lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`
+        apiPath(`/api/flights?lamin=${bbox.lamin}&lomin=${bbox.lomin}&lamax=${bbox.lamax}&lomax=${bbox.lomax}`)
       );
       setFlights(data.states ?? []);
     } catch (err) {
@@ -85,7 +92,7 @@ export function useSituation() {
     setTrafficLoading(true);
     setTrafficError(null);
     try {
-      const data = await fetchWithTimeout(`/api/traffic?lat=${activeCenter.lat}&lon=${activeCenter.lon}`);
+      const data = await fetchWithTimeout(apiPath(`/api/traffic?lat=${activeCenter.lat}&lon=${activeCenter.lon}`));
       setTraffic(data);
     } catch (err) {
       setTrafficError(err.message);
@@ -96,28 +103,28 @@ export function useSituation() {
 
   const fetchIncidents = useCallback(async () => {
     try {
-      const data = await fetchWithTimeout(`/api/incidents?lat=${activeCenter.lat}&lon=${activeCenter.lon}`);
+      const data = await fetchWithTimeout(apiPath(`/api/incidents?lat=${activeCenter.lat}&lon=${activeCenter.lon}`));
       setIncidents(data.incidents ?? []);
     } catch { /* non-critical */ }
   }, [activeCenter.lat, activeCenter.lon]);
 
   const fetchEarthquakes = useCallback(async () => {
     try {
-      const data = await fetchWithTimeout('/api/earthquakes');
+      const data = await fetchWithTimeout(apiPath('/api/earthquakes'));
       setEarthquakes(data.earthquakes ?? []);
     } catch { /* non-critical */ }
   }, []);
 
   const fetchEvents = useCallback(async () => {
     try {
-      const data = await fetchWithTimeout('/api/events');
+      const data = await fetchWithTimeout(apiPath('/api/events'));
       setEvents(data.events ?? []);
     } catch { /* non-critical */ }
   }, []);
 
   const fetchWeatherAlerts = useCallback(async () => {
     try {
-      const data = await fetchWithTimeout(`/api/weather-alerts?lat=${activeCenter.lat}&lon=${activeCenter.lon}`);
+      const data = await fetchWithTimeout(apiPath(`/api/weather-alerts?lat=${activeCenter.lat}&lon=${activeCenter.lon}`));
       setWeatherAlerts(data.alerts ?? []);
     } catch { /* non-critical */ }
   }, [activeCenter.lat, activeCenter.lon]);
