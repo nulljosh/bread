@@ -93,7 +93,7 @@ describe('api/flights handler', () => {
   it('falls back to 502 when both APIs fail', async () => {
     // Reload handler module to get a fresh cache (avoids stale cache from prior tests)
     vi.resetModules();
-    const { default: freshHandler } = await import('./flights.js?v=' + Date.now());
+    const { default: freshHandler } = await import('./flights.js');
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
     process.env.AVIATIONSTACK_API_KEY = 'test-key';
 
