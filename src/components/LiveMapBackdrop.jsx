@@ -37,6 +37,21 @@ const CITY_HUBS = [
   { label: 'Sydney', lat: -33.8688, lon: 151.2093 },
 ];
 
+function nearestHub(lat, lon) {
+  let best = CITY_HUBS[0];
+  let bestDist = Infinity;
+  for (const hub of CITY_HUBS) {
+    const dLat = hub.lat - lat;
+    const dLon = hub.lon - lon;
+    const dist = dLat * dLat + dLon * dLon;
+    if (dist < bestDist) {
+      best = hub;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
 function inferMarketPoint(question, i, center) {
   for (const k of GEO_KEYWORDS) {
     if (k.re.test(question || '')) return { lat: k.lat, lon: k.lon, label: k.label };
@@ -49,7 +64,6 @@ export default function LiveMapBackdrop({ dark }) {
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const sawGeoGrantedRef = useRef(false);
-  const shouldAutoFlyRef = useRef(true);
   const [center, setCenter] = useState(DEFAULT_CENTER);
   const [userPosition, setUserPosition] = useState(DEFAULT_CENTER);
   const [centerReady] = useState(true);
@@ -58,29 +72,32 @@ export default function LiveMapBackdrop({ dark }) {
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [] });
   const [selected, setSelected] = useState(null);
 
-  const fallbackPayload = (baseCenter) => ({
+  const fallbackPayload = (baseCenter) => {
+    const hub = nearestHub(baseCenter.lat, baseCenter.lon);
+    return {
     incidents: [
       {
-        type: 'construction',
-        lat: baseCenter.lat + 0.018,
-        lon: baseCenter.lon - 0.022,
-        description: 'Road works advisory (fallback)',
+        type: 'estimated-construction',
+        lat: hub.lat,
+        lon: hub.lon,
+        description: `Road works advisory near ${hub.label} (fallback)`,
       },
     ],
     trafficIncidents: [
       {
-        type: 'CONGESTION',
-        description: 'Traffic slowdown cluster (estimated)',
-        position: { lat: baseCenter.lat - 0.014, lon: baseCenter.lon + 0.021 },
+        type: 'ESTIMATED',
+        description: `Traffic slowdown estimate near ${hub.label}`,
+        position: { lat: hub.lat + 0.01, lon: hub.lon - 0.01 },
       },
     ],
     earthquakes: [],
     events: [
-      { title: `Local event pulse near ${locLabel || 'map center'}`, country: 'LOCAL', url: null },
+      { title: `Local event pulse near ${hub.label}`, country: 'LOCAL', url: null },
       { title: 'Transit disruption advisory', country: 'LOCAL', url: null },
     ],
     markets: [],
-  });
+  };
+  };
 
   useEffect(() => {
     try {
@@ -98,10 +115,10 @@ export default function LiveMapBackdrop({ dark }) {
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        shouldAutoFlyRef.current = true;
         const next = { lat: pos.coords.latitude, lon: pos.coords.longitude };
         setCenter(next);
         setUserPosition(next);
+        mapInstanceRef.current?.flyTo({ center: [next.lon, next.lat], zoom: 11.5, offset: [0, 120], duration: 850 });
         setLocLabel('Current location');
         setGeoState('granted');
         try {
@@ -118,10 +135,10 @@ export default function LiveMapBackdrop({ dark }) {
           const res = await fetch('https://ipapi.co/json/');
           const json = await res.json();
           if (json && typeof json.latitude === 'number' && typeof json.longitude === 'number') {
-            shouldAutoFlyRef.current = true;
             const next = { lat: json.latitude, lon: json.longitude };
             setCenter(next);
             setUserPosition(next);
+            mapInstanceRef.current?.flyTo({ center: [next.lon, next.lat], zoom: 11.5, offset: [0, 120], duration: 850 });
             setLocLabel(json.city ? `${json.city} (IP)` : 'IP fallback');
           } else {
             setLocLabel('Location unavailable');
@@ -197,7 +214,6 @@ export default function LiveMapBackdrop({ dark }) {
         map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
         const onMoveEnd = () => {
           const c = map.getCenter();
-          shouldAutoFlyRef.current = false;
           setCenter((prev) => {
             if (Math.abs(prev.lat - c.lat) < 0.08 && Math.abs(prev.lon - c.lng) < 0.08) return prev;
             return { lat: c.lat, lon: c.lng };
@@ -219,18 +235,6 @@ export default function LiveMapBackdrop({ dark }) {
       }
     };
   }, [dark, centerReady]);
-
-  useEffect(() => {
-    if (!mapInstanceRef.current) return;
-    if (!shouldAutoFlyRef.current) return;
-    mapInstanceRef.current.flyTo({
-      center: [center.lon, center.lat],
-      zoom: 11,
-      offset: [0, 120],
-      duration: 1200,
-    });
-    shouldAutoFlyRef.current = false;
-  }, [center.lat, center.lon]);
 
   useEffect(() => {
     let cancelled = false;
