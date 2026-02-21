@@ -84,3 +84,18 @@ Apple Pay note: Stripe Checkout can surface Apple Pay automatically on supported
 ## License
 
 MIT. Not financial advice.
+
+## Name Ideas
+
+- Sentinel
+- Aegis
+- Citadel
+- Bastion
+- Atlas
+- Beacon
+- Vigil
+- Nexus
+- Overwatch
+- Horizon
+- Signal
+- Gridlock
