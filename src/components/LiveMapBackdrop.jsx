@@ -21,6 +21,20 @@ const GEO_KEYWORDS = [
   { re: /\blondon\b/i, lat: 51.5074, lon: -0.1278, label: 'London' },
   { re: /\bparis\b/i, lat: 48.8566, lon: 2.3522, label: 'Paris' },
   { re: /\btokyo\b/i, lat: 35.6762, lon: 139.6503, label: 'Tokyo' },
+  { re: /\bvancouver\b/i, lat: 49.2827, lon: -123.1207, label: 'Vancouver' },
+  { re: /\btoronto\b/i, lat: 43.6532, lon: -79.3832, label: 'Toronto' },
+];
+
+const CITY_HUBS = [
+  { label: 'Vancouver', lat: 49.2827, lon: -123.1207 },
+  { label: 'Toronto', lat: 43.6532, lon: -79.3832 },
+  { label: 'New York', lat: 40.7128, lon: -74.0060 },
+  { label: 'Chicago', lat: 41.8781, lon: -87.6298 },
+  { label: 'Los Angeles', lat: 34.0522, lon: -118.2437 },
+  { label: 'London', lat: 51.5074, lon: -0.1278 },
+  { label: 'Paris', lat: 48.8566, lon: 2.3522 },
+  { label: 'Tokyo', lat: 35.6762, lon: 139.6503 },
+  { label: 'Sydney', lat: -33.8688, lon: 151.2093 },
 ];
 
 function inferMarketPoint(question, i, center) {
@@ -255,18 +269,32 @@ export default function LiveMapBackdrop({ dark }) {
         });
 
         // Global event pulses (visualized near center for ambient awareness).
-        payload.events.slice(0, 4).forEach((ev, i) => {
-          const offsetLon = center.lon + (i - 1) * 0.22;
-          const offsetLat = center.lat + (i % 2 ? 0.18 : -0.18);
+        payload.events.slice(0, 16).forEach((ev, i) => {
+          let target = null;
+          for (const k of GEO_KEYWORDS) {
+            if (k.re.test(ev.title || '')) {
+              target = { lat: k.lat, lon: k.lon, label: k.label };
+              break;
+            }
+          }
+          if (!target) {
+            const hub = CITY_HUBS[i % CITY_HUBS.length];
+            const ring = (i % 3) * 0.12;
+            target = {
+              lat: hub.lat + (i % 2 ? ring : -ring * 0.7),
+              lon: hub.lon + (i % 2 ? -ring * 0.8 : ring),
+              label: hub.label,
+            };
+          }
           markersRef.current.push(
             new maplibregl.Marker({
               element: makePulse(
-                'width:8px;height:8px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
-                ev.title,
-                { type: 'event', title: ev.country ? `[${ev.country}]` : 'Global Event', detail: ev.title, level: 'global', link: ev.url || null }
+                'width:9px;height:9px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
+                `${target.label}: ${ev.title}`,
+                { type: 'event', title: ev.country ? `[${ev.country}] ${target.label}` : target.label, detail: ev.title, level: 'global', link: ev.url || null }
               ),
             })
-              .setLngLat([offsetLon, offsetLat])
+              .setLngLat([target.lon, target.lat])
               .addTo(mapInstanceRef.current)
           );
         });
