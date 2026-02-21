@@ -11,6 +11,8 @@ import { tldr } from './utils/helpers';
 import { BlinkingDot, StatusBar, Card } from './components/ui';
 import Ticker from './components/Ticker';
 import PricingPage from './components/PricingPage';
+import BrokerPanel from './components/BrokerPanel';
+import { createBroker } from './utils/broker';
 import { useSubscription } from './hooks/useSubscription';
 
 // Trading Simulator Assets (US50 + Indices + Crypto)
