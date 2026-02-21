@@ -18,9 +18,10 @@ Fast financial terminal with live markets, prediction signals, and a paper-tradi
 
 ## Map-First Mode
 
-- Full-page live map backdrop with event pulses
-- User location pin + recenter control
+- Full-page live map backdrop with pulsing event markers
+- User location drop-pin (`YOU`) + recenter control
 - Local overlays: traffic incidents + construction/barriers + seismic events
+- Prediction markets projected onto geographic anchors (city/team/politics keyword inference)
 - Global feed pulses: geopolitical events
 
 Local dev fallback:

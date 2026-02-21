@@ -9,6 +9,33 @@ function apiPath(path) {
   return `${API_BASE}${path}`;
 }
 
+const GEO_KEYWORDS = [
+  { re: /\bnew york|nyc|knicks|nets|yankees|mets|giants|jets|rangers\b/i, lat: 40.7128, lon: -74.0060, label: 'New York' },
+  { re: /\blos angeles|lakers|clippers|dodgers|rams|chargers\b/i, lat: 34.0522, lon: -118.2437, label: 'Los Angeles' },
+  { re: /\bchicago|bulls|bears|cubs|white sox\b/i, lat: 41.8781, lon: -87.6298, label: 'Chicago' },
+  { re: /\bboston|celtics|red sox|patriots|bruins\b/i, lat: 42.3601, lon: -71.0589, label: 'Boston' },
+  { re: /\bmiami|heat|dolphins|marlins\b/i, lat: 25.7617, lon: -80.1918, label: 'Miami' },
+  { re: /\bdallas|mavericks|cowboys|rangers\b/i, lat: 32.7767, lon: -96.7970, label: 'Dallas' },
+  { re: /\bsan francisco|warriors|49ers|giants\b/i, lat: 37.7749, lon: -122.4194, label: 'San Francisco' },
+  { re: /\bwashington|white house|senate|congress|supreme court|president\b/i, lat: 38.9072, lon: -77.0369, label: 'Washington, DC' },
+  { re: /\blondon\b/i, lat: 51.5074, lon: -0.1278, label: 'London' },
+  { re: /\bparis\b/i, lat: 48.8566, lon: 2.3522, label: 'Paris' },
+  { re: /\btokyo\b/i, lat: 35.6762, lon: 139.6503, label: 'Tokyo' },
+];
+
+function inferMarketPoint(question, i, center) {
+  for (const k of GEO_KEYWORDS) {
+    if (k.re.test(question || '')) return { lat: k.lat, lon: k.lon, label: k.label };
+  }
+  // Fallback: cluster unresolved markets around current center
+  const offsets = [
+    { lat: 0.18, lon: 0.00 }, { lat: -0.14, lon: 0.16 }, { lat: 0.08, lon: -0.20 },
+    { lat: -0.12, lon: -0.14 }, { lat: 0.20, lon: 0.18 },
+  ];
+  const o = offsets[i % offsets.length];
+  return { lat: center.lat + o.lat, lon: center.lon + o.lon, label: 'Near you' };
+}
+
 export default function LiveMapBackdrop({ dark }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -16,7 +43,7 @@ export default function LiveMapBackdrop({ dark }) {
   const [center, setCenter] = useState(DEFAULT_CENTER);
   const [centerReady, setCenterReady] = useState(false);
   const [locLabel, setLocLabel] = useState('Locating…');
-  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [] });
+  const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [] });
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -99,11 +126,12 @@ export default function LiveMapBackdrop({ dark }) {
     let cancelled = false;
     const fetchSituation = async () => {
       try {
-        const [inc, traffic, eq, ev] = await Promise.all([
+        const [inc, traffic, eq, ev, mk] = await Promise.all([
           fetch(apiPath(`/api/incidents?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
           fetch(apiPath(`/api/traffic?lat=${center.lat}&lon=${center.lon}`)).then(r => r.json()).catch(() => ({ incidents: [] })),
           fetch(apiPath('/api/earthquakes')).then(r => r.json()).catch(() => ({ earthquakes: [] })),
           fetch(apiPath('/api/events')).then(r => r.json()).catch(() => ({ events: [] })),
+          fetch(apiPath('/api/markets')).then(r => r.json()).catch(() => []),
         ]);
         if (!cancelled) {
           setPayload({
@@ -111,10 +139,11 @@ export default function LiveMapBackdrop({ dark }) {
             trafficIncidents: traffic.incidents || [],
             earthquakes: eq.earthquakes || [],
             events: ev.events || [],
+            markets: Array.isArray(mk) ? mk.slice(0, 20) : [],
           });
         }
       } catch {
-        if (!cancelled) setPayload({ incidents: [], trafficIncidents: [], earthquakes: [], events: [] });
+        if (!cancelled) setPayload({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [] });
       }
     };
     fetchSituation();
@@ -218,6 +247,23 @@ export default function LiveMapBackdrop({ dark }) {
               ),
             })
               .setLngLat([offsetLon, offsetLat])
+              .addTo(mapInstanceRef.current)
+          );
+        });
+
+        payload.markets.forEach((m, i) => {
+          const p = inferMarketPoint(m.question, i, center);
+          const prob = typeof m.probability === 'number' ? m.probability : 0.5;
+          const conf = Math.max(prob, 1 - prob);
+          const size = conf > 0.9 ? 12 : conf > 0.75 ? 10 : 8;
+          markersRef.current.push(
+            new maplibregl.Marker({
+              element: makePulse(
+                `width:${size}px;height:${size}px;border-radius:50%;background:${prob >= 0.5 ? '#22C55E' : '#F43F5E'};box-shadow:0 0 0 0 rgba(34,197,94,0.4);animation:pulse-cyan 2.4s infinite;`,
+                `${Math.round(prob * 100)}% · ${m.question || 'market'}`
+              ),
+            })
+              .setLngLat([p.lon, p.lat])
               .addTo(mapInstanceRef.current)
           );
         });
