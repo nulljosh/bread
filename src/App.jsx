@@ -217,11 +217,6 @@ export default function App() {
   const liveStocksRef = useRef({});
 
   // Prediction Market State
-  const [asset, setAsset] = useState('silver');
-  const [scenario, setScenario] = useState('base');
-  const [sel, setSel] = useState(0);
-  const [simSeed, setSimSeed] = useState(42);
-  const [showMacro, setShowMacro] = useState(false);
   const [pmCategory, setPmCategory] = useState('all');
   const [showHighProb, setShowHighProb] = useState(false);
   const [show15Min, setShow15Min] = useState(false);
@@ -871,12 +866,6 @@ const reset = useCallback(() => {
           <span style={{ fontSize: 10, color: t.textTertiary, fontVariantNumeric: 'tabular-nums' }}>{formatLastUpdated(lastUpdated)}</span>
           {pmError && <span style={{ fontSize: 9, color: t.red }}>API error</span>}
           <span style={{ width: 1, height: 14, background: t.border }} />
-          <button
-            onClick={() => setShowMacro(!showMacro)}
-            style={{ background: showMacro ? t.accent : t.surface, border: 'none', borderRadius: 6, padding: '5px 10px', color: showMacro ? '#fff' : t.textSecondary, fontSize: 10, fontWeight: 600, cursor: 'pointer' }}
-          >
-            MACRO
-          </button>
           {isFree && (
             <button
               onClick={() => setShowPricing(true)}
@@ -900,19 +889,6 @@ const reset = useCallback(() => {
           </button>
         </div>
       </header>
-
-      {/* Macro Banner (toggle) */}
-      {showMacro && (
-        <div style={{ padding: '12px 16px', background: t.surface, borderBottom: `1px solid ${t.border}` }}>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 11, color: t.textSecondary }}>
-            <span><span style={{ color: t.red }}>AI Bubble</span> Mag7 = 35% S&P</span>
-            <span><span style={{ color: t.yellow }}>Debt</span> $36T / 120% GDP</span>
-            <span><span style={{ color: t.cyan }}>BTC</span> ETF +$40B</span>
-            <span><span style={{ color: t.green }}>Gold</span> CB +1,037t</span>
-            <span style={{ color: t.textTertiary, fontStyle: 'italic' }}>Nothing ever happens</span>
-          </div>
-        </div>
-      )}
 
       {/* Scrolling Ticker Tape */}
       <Ticker items={tickerItems} theme={t} />
