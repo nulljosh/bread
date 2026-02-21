@@ -12,6 +12,8 @@ import { BlinkingDot, StatusBar, Card } from './components/ui';
 import Ticker from './components/Ticker';
 import PricingPage from './components/PricingPage';
 import BrokerPanel from './components/BrokerPanel';
+import CramerPanel from './components/CramerPanel';
+import SituationMonitor from './components/SituationMonitor';
 import { createBroker } from './utils/broker';
 import { useSubscription } from './hooks/useSubscription';
 
@@ -1299,6 +1301,12 @@ const reset = useCallback(() => {
               localStorage.setItem('rise_broker_autosend', JSON.stringify(v));
             }}
           />
+
+          {/* Cramer Tracker */}
+          <CramerPanel dark={dark} t={t} font={font} stocks={stocks} />
+
+          {/* Situation Monitor */}
+          <SituationMonitor dark={dark} t={t} font={font} />
         </div>
 
         {/* Footer */}
