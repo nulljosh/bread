@@ -51,6 +51,7 @@ export default function LiveMapBackdrop({ dark }) {
   const sawGeoGrantedRef = useRef(false);
   const shouldAutoFlyRef = useRef(true);
   const [center, setCenter] = useState(DEFAULT_CENTER);
+  const [userPosition, setUserPosition] = useState(DEFAULT_CENTER);
   const [centerReady] = useState(true);
   const [locLabel, setLocLabel] = useState('Locating…');
   const [geoState, setGeoState] = useState('checking');
@@ -98,7 +99,9 @@ export default function LiveMapBackdrop({ dark }) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         shouldAutoFlyRef.current = true;
-        setCenter({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        const next = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        setCenter(next);
+        setUserPosition(next);
         setLocLabel('Current location');
         setGeoState('granted');
         try {
@@ -115,7 +118,9 @@ export default function LiveMapBackdrop({ dark }) {
           const json = await res.json();
           if (json && typeof json.latitude === 'number' && typeof json.longitude === 'number') {
             shouldAutoFlyRef.current = true;
-            setCenter({ lat: json.latitude, lon: json.longitude });
+            const next = { lat: json.latitude, lon: json.longitude };
+            setCenter(next);
+            setUserPosition(next);
             setLocLabel(json.city ? `${json.city} (IP)` : 'IP fallback');
           } else {
             setLocLabel('Location unavailable');
@@ -193,7 +198,6 @@ export default function LiveMapBackdrop({ dark }) {
             if (Math.abs(prev.lat - c.lat) < 0.08 && Math.abs(prev.lon - c.lng) < 0.08) return prev;
             return { lat: c.lat, lon: c.lng };
           });
-          setLocLabel('Map center');
         };
         map.on('moveend', onMoveEnd);
         mapInstanceRef.current = map;
@@ -297,7 +301,7 @@ export default function LiveMapBackdrop({ dark }) {
               { type: 'location', title: 'You', detail: locLabel, level: 'local' }
             ),
           })
-            .setLngLat([center.lon, center.lat])
+            .setLngLat([userPosition.lon, userPosition.lat])
             .addTo(mapInstanceRef.current)
         );
         markersRef.current.push(
@@ -309,7 +313,7 @@ export default function LiveMapBackdrop({ dark }) {
             ),
             offset: [0, -18],
           })
-            .setLngLat([center.lon, center.lat])
+            .setLngLat([userPosition.lon, userPosition.lat])
             .addTo(mapInstanceRef.current)
         );
 
@@ -424,7 +428,7 @@ export default function LiveMapBackdrop({ dark }) {
         // ignore map marker failures
       }
     })();
-  }, [center.lat, center.lon, payload]);
+  }, [center.lat, center.lon, userPosition.lat, userPosition.lon, payload]);
 
   return (
     <>
@@ -495,7 +499,7 @@ export default function LiveMapBackdrop({ dark }) {
             requestLocation();
             return;
           }
-          mapInstanceRef.current?.flyTo({ center: [center.lon, center.lat], zoom: 11.5, offset: [0, 120], duration: 900 });
+          mapInstanceRef.current?.flyTo({ center: [userPosition.lon, userPosition.lat], zoom: 11.5, offset: [0, 120], duration: 900 });
         }}
         style={{
           position: 'fixed',
