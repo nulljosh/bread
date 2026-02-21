@@ -48,22 +48,35 @@ export default function LiveMapBackdrop({ dark }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const sawGeoGrantedRef = useRef(false);
   const [center, setCenter] = useState(DEFAULT_CENTER);
-  const [centerReady, setCenterReady] = useState(false);
+  const [centerReady] = useState(true);
   const [locLabel, setLocLabel] = useState('Locating…');
   const [payload, setPayload] = useState({ incidents: [], trafficIncidents: [], earthquakes: [], events: [], markets: [] });
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
+    try {
+      sawGeoGrantedRef.current = localStorage.getItem('rise_geo_granted') === '1';
+    } catch {
+      sawGeoGrantedRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
     if (!navigator.geolocation) {
-      setCenterReady(true);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCenter({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         setLocLabel('Current location');
-        setCenterReady(true);
+        try {
+          localStorage.setItem('rise_geo_granted', '1');
+          sawGeoGrantedRef.current = true;
+        } catch {
+          // ignore storage failures
+        }
       },
       async () => {
         try {
@@ -78,12 +91,43 @@ export default function LiveMapBackdrop({ dark }) {
         } catch {
           // fallback stays on default center
           setLocLabel('Location unavailable');
-        } finally {
-          setCenterReady(true);
         }
       },
       { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 }
     );
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.permissions?.query) return;
+    let statusRef = null;
+    const onChange = () => {
+      if (statusRef?.state === 'granted' && !sawGeoGrantedRef.current) {
+        try { localStorage.setItem('rise_geo_granted', '1'); } catch {}
+        sawGeoGrantedRef.current = true;
+        window.location.reload();
+      }
+    };
+
+    navigator.permissions
+      .query({ name: 'geolocation' })
+      .then((status) => {
+        statusRef = status;
+        if (typeof status.addEventListener === 'function') {
+          status.addEventListener('change', onChange);
+        } else {
+          status.onchange = onChange;
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      if (!statusRef) return;
+      if (typeof statusRef.removeEventListener === 'function') {
+        statusRef.removeEventListener('change', onChange);
+      } else if (statusRef.onchange === onChange) {
+        statusRef.onchange = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
