@@ -82,6 +82,10 @@ function trafficColor(incident) {
   return '#22c55e';
 }
 
+function mapsLink(lat, lon, zoom = 14) {
+  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${zoom}/${lat}/${lon}`;
+}
+
 export default function LiveMapBackdrop({ dark }) {
   const storedGeo = loadStoredGeo();
   const mapRef = useRef(null);
@@ -348,7 +352,14 @@ export default function LiveMapBackdrop({ dark }) {
             element: makePulse(
               'width:18px;height:18px;border-radius:50%;background:#3B82F6;border:3px solid rgba(255,255,255,0.9);box-shadow:0 0 0 0 rgba(59,130,246,0.65);animation:pulse-blue 2s infinite;',
               'you',
-              { type: 'location', title: 'You', detail: locLabel, level: 'local' }
+              {
+                type: 'location',
+                title: 'You',
+                detail: locLabel,
+                level: 'local',
+                source: geoState === 'granted' ? 'Browser Geolocation' : 'IP Geolocation',
+                link: mapsLink(userPosition.lat, userPosition.lon),
+              }
             ),
           })
             .setLngLat([userPosition.lon, userPosition.lat])
@@ -359,7 +370,14 @@ export default function LiveMapBackdrop({ dark }) {
             element: makePulse(
               'background:rgba(15,23,42,0.82);color:#fff;font:700 10px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);',
               'you',
-              { type: 'location', title: 'You', detail: locLabel, level: 'local' }
+              {
+                type: 'location',
+                title: 'You',
+                detail: locLabel,
+                level: 'local',
+                source: geoState === 'granted' ? 'Browser Geolocation' : 'IP Geolocation',
+                link: mapsLink(userPosition.lat, userPosition.lon),
+              }
             ),
             offset: [0, -18],
           })
@@ -373,7 +391,14 @@ export default function LiveMapBackdrop({ dark }) {
             element: makePulse(
               'width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,0.45);animation:pulse-cyan 2s infinite;',
               'local activity',
-              { type: 'local', title: 'LOCAL ACTIVITY', detail: `Live local pulse near ${locLabel}`, level: 'local' }
+              {
+                type: 'local',
+                title: 'LOCAL ACTIVITY',
+                detail: `Live local pulse near ${locLabel}`,
+                level: 'local',
+                source: 'Local fallback signal',
+                link: `https://www.google.com/search?q=${encodeURIComponent(`events near ${locLabel}`)}`,
+              }
             ),
           })
             .setLngLat([center.lon + 0.006, center.lat + 0.004])
@@ -387,7 +412,14 @@ export default function LiveMapBackdrop({ dark }) {
               element: makePulse(
                 'width:44px;height:6px;border-radius:999px;background:repeating-linear-gradient(90deg,#f59e0b 0 7px,#fbbf24 7px 14px);border:1px solid rgba(0,0,0,0.22);transform:rotate(-22deg);box-shadow:0 0 0 0 rgba(245,158,11,0.35);animation:pulse-amber 1.8s infinite;',
                 inc.description || inc.type,
-                { type: 'construction', title: (inc.type || 'construction').toUpperCase(), detail: inc.description || 'Road/area incident', level: 'local' }
+                {
+                  type: 'construction',
+                  title: (inc.type || 'construction').toUpperCase(),
+                  detail: inc.description || 'Road/area incident',
+                  level: 'local',
+                  source: 'OpenStreetMap / Overpass',
+                  link: mapsLink(inc.lat, inc.lon),
+                }
               ),
             })
               .setLngLat([inc.lon, inc.lat])
@@ -404,7 +436,14 @@ export default function LiveMapBackdrop({ dark }) {
               element: makePulse(
                 `width:48px;height:6px;border-radius:999px;background:${lineColor};border:1px solid rgba(0,0,0,0.2);transform:rotate(18deg);box-shadow:0 0 0 0 rgba(249,115,22,0.35);animation:pulse-amber 1.6s infinite;`,
                 inc.description || inc.type || 'traffic incident',
-                { type: 'traffic', title: (inc.type || 'traffic').toUpperCase(), detail: inc.description || 'Traffic incident', level: 'local' }
+                {
+                  type: 'traffic',
+                  title: (inc.type || 'traffic').toUpperCase(),
+                  detail: inc.description || 'Traffic incident',
+                  level: 'local',
+                  source: 'Traffic feed / fallback model',
+                  link: mapsLink(p.lat, p.lon),
+                }
               ),
             })
               .setLngLat([p.lon, p.lat])
@@ -425,6 +464,8 @@ export default function LiveMapBackdrop({ dark }) {
                   title: `M${eq.mag?.toFixed?.(1) ?? eq.mag}`,
                   detail: eq.place || 'Earthquake',
                   level: (eq.mag || 0) >= 6 ? 'high' : (eq.mag || 0) >= 4 ? 'elevated' : 'monitor',
+                  source: 'USGS Earthquake Catalog',
+                  link: eq.url || 'https://earthquake.usgs.gov/earthquakes/map/',
                 }
               ),
             })
@@ -456,7 +497,14 @@ export default function LiveMapBackdrop({ dark }) {
               element: makePulse(
                 'width:9px;height:9px;border-radius:50%;background:#22D3EE;box-shadow:0 0 0 0 rgba(34,211,238,0.5);animation:pulse-cyan 2.2s infinite;',
                 `${target.label}: ${ev.title}`,
-                { type: 'event', title: ev.country ? `[${ev.country}] ${target.label}` : target.label, detail: ev.title, level: 'global', link: ev.url || null }
+                {
+                  type: 'event',
+                  title: ev.country ? `[${ev.country}] ${target.label}` : target.label,
+                  detail: ev.title,
+                  level: 'global',
+                  source: 'GDELT / News feed',
+                  link: ev.url || 'https://www.gdeltproject.org/',
+                }
               ),
             })
               .setLngLat([target.lon, target.lat])
@@ -480,6 +528,7 @@ export default function LiveMapBackdrop({ dark }) {
                   title: `${Math.round(prob * 100)}% ${prob >= 0.5 ? 'YES' : 'NO'}`,
                   detail: m.question || 'Prediction market',
                   level: p.label,
+                  source: 'Polymarket',
                   link: `https://polymarket.com/event/${m.eventSlug || m.slug}`,
                 }
               ),
@@ -589,6 +638,9 @@ export default function LiveMapBackdrop({ dark }) {
           </div>
           <div style={{ marginTop: 4, color: '#cbd5e1', fontSize: 11, lineHeight: 1.45 }}>{selected.detail}</div>
           <div style={{ marginTop: 6, fontSize: 10, color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{selected.level}</div>
+          <div style={{ marginTop: 6, fontSize: 10, color: '#93c5fd' }}>
+            Source: {selected.source || 'Unknown'}
+          </div>
           {selected.link && (
             <a
               href={selected.link}
@@ -596,7 +648,7 @@ export default function LiveMapBackdrop({ dark }) {
               rel="noopener noreferrer"
               style={{ display: 'inline-block', marginTop: 8, color: '#60a5fa', fontSize: 11, textDecoration: 'underline' }}
             >
-              Open source link →
+              Open source →
             </a>
           )}
         </div>
