@@ -1,16 +1,8 @@
 // Vercel cron: 9:30 AM ET (14:30 UTC) weekdays — paper trade sim signals via Alpaca
 // Schedule in vercel.json: { "path": "/api/broker/morning-run", "schedule": "30 14 * * 1-5" }
-const ALPACA_BASE = process.env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets';
+import { ALPACA_BASE, alpacaHeaders, hasAlpacaKey } from './alpaca.js';
 const WATCHLIST = ['AAPL', 'NVDA', 'MSFT', 'SPY', 'QQQ'];
 const SIGNAL_THRESHOLD = 0.55; // bull prob > 55% = buy, < 45% = sell
-
-function alpacaHeaders() {
-  return {
-    'APCA-API-KEY-ID': process.env.ALPACA_API_KEY || '',
-    'APCA-API-SECRET-KEY': process.env.ALPACA_API_SECRET || '',
-    'Content-Type': 'application/json',
-  };
-}
 
 // GBM Monte Carlo — 500 paths, 30-day horizon
 function monteCarlo(price, mu = 0.0005, sigma = 0.02, paths = 500, days = 30) {
@@ -36,7 +28,7 @@ async function getPrice(symbol) {
 async function placeOrder(symbol, qty, side) {
   const r = await fetch(`${ALPACA_BASE}/v2/orders`, {
     method: 'POST',
-    headers: alpacaHeaders(),
+    headers: alpacaHeaders(true),
     body: JSON.stringify({ symbol, qty: String(qty), side, type: 'market', time_in_force: 'day' }),
   });
   const data = await r.json();
@@ -50,7 +42,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  if (!process.env.ALPACA_API_KEY) {
+  if (!hasAlpacaKey()) {
     console.log('[MORNING-RUN] Alpaca not configured — skipping');
     return res.status(200).json({ ok: true, message: 'Alpaca not configured' });
   }

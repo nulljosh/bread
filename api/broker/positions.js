@@ -1,24 +1,17 @@
 // GET current Alpaca paper positions + account summary
-const BASE = process.env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets';
-
-function alpacaHeaders() {
-  return {
-    'APCA-API-KEY-ID': process.env.ALPACA_API_KEY || '',
-    'APCA-API-SECRET-KEY': process.env.ALPACA_API_SECRET || '',
-  };
-}
+import { ALPACA_BASE, alpacaHeaders, hasAlpacaKey } from './alpaca.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (!process.env.ALPACA_API_KEY) {
+  if (!hasAlpacaKey()) {
     return res.status(200).json({ positions: [], account: null, configured: false });
   }
 
   try {
     const [posRes, accRes] = await Promise.all([
-      fetch(`${BASE}/v2/positions`, { headers: alpacaHeaders() }),
-      fetch(`${BASE}/v2/account`, { headers: alpacaHeaders() }),
+      fetch(`${ALPACA_BASE}/v2/positions`, { headers: alpacaHeaders() }),
+      fetch(`${ALPACA_BASE}/v2/account`, { headers: alpacaHeaders() }),
     ]);
     const [raw, account] = await Promise.all([posRes.json(), accRes.json()]);
 
